@@ -1,4 +1,4 @@
-import { describe, test, expect, afterEach } from "bun:test";
+import { describe, test, expect, afterEach, spyOn } from "bun:test";
 import React, { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { xinProxy, updates } from "tosijs";
@@ -9,6 +9,8 @@ const { state } = xinProxy({
     greeting: "hello",
     count: 0,
     todos: [{ id: 1, text: "write tests" }] as { id: number; text: string }[],
+    first: "alpha",
+    second: "beta",
   },
 });
 
@@ -108,6 +110,35 @@ describe("useTosi", () => {
     expect(container.querySelector(".reader")!.textContent).toBe("goodbye");
   });
 
+  test("re-syncs when the observed path changes across renders", async () => {
+    const Switcher = ({ path }: { path: string }) => {
+      const [value] = useTosi<string>(path);
+      return <div>{value}</div>;
+    };
+    const container = render(<Switcher path="state.first" />);
+    // drain any registration touch so it can't mask a stale render
+    await flush();
+    expect(container.textContent).toBe("alpha");
+
+    const root = roots[roots.length - 1];
+    act(() => {
+      root.render(<Switcher path="state.second" />);
+    });
+    // no touch on state.second — the value must come from subscribe-time sync
+    expect(container.textContent).toBe("beta");
+  });
+
+  test("re-renders on in-place array mutation", async () => {
+    const Todos = () => {
+      const [todos] = useTosi<{ id: number; text: string }[]>("state.todos");
+      return <div>{todos.map((item) => item.text).join(", ")}</div>;
+    };
+    const container = render(<Todos />);
+    state.todos.push({ id: 99, text: "pushed in place" });
+    await flush();
+    expect(container.textContent).toContain("pushed in place");
+  });
+
   test("stops observing after unmount", async () => {
     let renderCount = 0;
     const Counter = () => {
@@ -128,13 +159,20 @@ describe("useTosi", () => {
   });
 
   test("throws when passed something that is neither path nor proxy", () => {
-    const Broken = () => {
-      const [value] = useTosi({ not: "a proxy" } as any);
-      return <div>{String(value)}</div>;
-    };
-    expect(() => {
-      render(<Broken />);
-    }).toThrow("useTosi must either be passed a path or a tosijs proxy");
+    // the throw is intentional — keep React's error-boundary advice and our
+    // own console.error out of the test output
+    const quiet = spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const Broken = () => {
+        const [value] = useTosi({ not: "a proxy" } as any);
+        return <div>{String(value)}</div>;
+      };
+      expect(() => {
+        render(<Broken />);
+      }).toThrow("useTosi must either be passed a path or a tosijs proxy");
+    } finally {
+      quiet.mockRestore();
+    }
   });
 
   test("useXin is a deprecated alias for useTosi", () => {

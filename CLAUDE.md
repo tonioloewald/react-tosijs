@@ -36,8 +36,16 @@ was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
 - `bun test` — bun test runner; tests live in `tests/`, DOM comes from happy-dom via the
   preload in `bunfig.toml` (`tests/setup.ts` registers globals and sets
   `IS_REACT_ACT_ENVIRONMENT`). Run a single file with `bun test tests/use-tosi.test.tsx`.
+  `tests/subscription-churn.test.tsx` must stay in its own file — it wraps the tosijs
+  module via `mock.module` before importing the library (and the mock factory must only
+  reference values captured *before* `mock.module` is called, or bun deadlocks).
+- `npm publish` runs `prepublishOnly` (tests + build) automatically.
 
 There is no lint/format script (eslint/prettier are devDeps only).
+
+Follow-up routing: deferred work goes to `TODO.md`; workarounds for upstream gaps are
+mirrored in `UPSTREAM.md` with their filed issue URLs (file, don't fix — per shared
+practices).
 
 ## Build system (dev.ts)
 

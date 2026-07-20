@@ -6,7 +6,14 @@ import React, {
   FunctionComponent,
   ComponentPropsWithRef,
 } from "react";
-import { xin, observe, unobserve, tosiPath, XinTouchableType } from "tosijs";
+import * as tosijs from "tosijs";
+import type { XinTouchableType } from "tosijs";
+
+const { xin, observe, unobserve } = tosijs;
+// tosiPath arrived in tosijs 1.1; fall back to xinPath so the wide
+// peer range (^1.0.6) keeps working
+const pathOf: (x: any) => string | undefined =
+  (tosijs as any).tosiPath ?? (tosijs as any).xinPath;
 
 type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
 
@@ -14,7 +21,7 @@ export const useTosi = function <T = any>(
   observed: XinTouchableType,
   initialValue?: T,
 ): HookType<T> {
-  const path = typeof observed === "string" ? observed : tosiPath(observed);
+  const path = typeof observed === "string" ? observed : pathOf(observed);
   if (typeof path !== "string") {
     console.error(
       "useTosi must either be passed a path or a tosijs proxy",
@@ -26,9 +33,15 @@ export const useTosi = function <T = any>(
     xin[path] !== undefined ? xin[path] : initialValue,
   );
   useEffect(() => {
-    const listener = observe(path, () => {
-      update(xin[path]);
-    });
+    // the updater form keeps function values stored as values, not
+    // invoked as updaters
+    const sync = (): void => {
+      update(() => (xin[path] !== undefined ? xin[path] : initialValue));
+    };
+    const listener = observe(path, sync);
+    // observe() only fires on touch — sync now in case the path changed
+    // since the last committed render
+    sync();
     return () => {
       unobserve(listener);
     };

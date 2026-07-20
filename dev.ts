@@ -9,6 +9,8 @@ const PUBLIC = path.resolve(PROJECT_ROOT, "docs");
 const DIST = path.resolve(PROJECT_ROOT, "dist");
 const isSPA = true;
 
+const buildOnly = process.argv.includes("--build");
+
 async function prebuild() {
   console.time("prebuild");
   const config = JSON.parse(await Bun.file("package.json").text());
@@ -18,63 +20,52 @@ async function prebuild() {
   );
   console.log(config.version);
 
-  let output = await $`rm -rf ${PUBLIC}`.text();
-  output = await $`mkdir ${PUBLIC}`.text();
-  output = await $`cp ./demo/static/* ${PUBLIC}`.text();
+  await $`rm -rf ${PUBLIC}`;
+  await $`mkdir ${PUBLIC}`;
+  await $`cp ./demo/static/* ${PUBLIC}`;
+  // design sources (Amadine etc.) stay out of the published site
+  await $`rm -f ${PUBLIC}/*.amdc`;
 
-  output = await $`rm -rf ${DIST}`.text();
-  output = await $`mkdir ${DIST}`.text();
+  await $`rm -rf ${DIST}`;
+  await $`mkdir ${DIST}`;
   console.timeEnd("prebuild");
 
   await build();
 }
 
+// Bun.build throws on failure, so build errors propagate to the caller
 async function build() {
   console.time("build");
-  let result;
 
   try {
     await $`bun tsc --declaration --emitDeclarationOnly --outDir dist`;
-  } catch (e) {
-    console.log("types created");
+  } catch (e: any) {
+    console.error("tsc declaration build failed:");
+    console.error(e.stdout?.toString() ?? e);
+    if (buildOnly) process.exit(1);
   }
-  result = await Bun.build({
+  await Bun.build({
     entrypoints: ["./src/index.ts"],
     outdir: DIST,
     sourcemap: "linked",
     format: "esm",
-    // minify: true,
     external: ["tosijs", "react"],
   });
-  if (!result.success) {
-    console.error("dist build failed");
-    for (const message of result.logs) {
-      console.error(message);
-    }
-    return;
-  }
 
   await Bun.build({
     entrypoints: ["./demo/src/index.tsx"],
     outdir: PUBLIC,
     target: "browser",
+    minify: true,
   });
-  if (!result.success) {
-    console.error("demo build failed");
-    for (const message of result.logs) {
-      console.error(message);
-    }
-    return;
-  }
 
   console.timeEnd("build");
 }
 
-const buildOnly = process.argv.includes("--build");
-
 if (!buildOnly) {
-  watch("./src").on("change", build);
-  watch("./demo").on("change", prebuild);
+  // keep the watcher alive when a rebuild fails
+  watch("./src").on("change", () => build().catch(console.error));
+  watch("./demo").on("change", () => prebuild().catch(console.error));
 }
 
 await prebuild();
@@ -130,4 +121,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`Listening on https://localhost:${PORT}`);
+console.log(`Listening on http://localhost:${PORT}`);

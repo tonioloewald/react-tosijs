@@ -78,3 +78,7 @@ typings/
 
 # macOS
 .DS_Store
+
+# design sources stay out of published/static dirs
+demo/static/*.amdc
+docs/*.amdc

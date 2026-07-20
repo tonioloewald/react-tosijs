@@ -132,8 +132,9 @@ const Markdown = reactWebComponents.xinMd
 const Doc = () => <Markdown class="doc" src="/README.md" />
 ```
 
-> Note: with React 18, pass `class` (not `className`) to web components —
-> React sets props on custom elements as attributes verbatim.
+> Note: on React 18, pass `class` (not `className`) to web components —
+> React 18 sets props on custom elements as attributes verbatim. React 19
+> handles `className` on custom elements natively.
 
 ## Development
 

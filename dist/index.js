@@ -5,18 +5,22 @@ import {
   useCallback,
   createElement
 } from "react";
-import { xin, observe, unobserve, tosiPath } from "tosijs";
+import * as tosijs from "tosijs";
+var { xin, observe, unobserve } = tosijs;
+var pathOf = tosijs.tosiPath ?? tosijs.xinPath;
 var useTosi = function(observed, initialValue) {
-  const path = typeof observed === "string" ? observed : tosiPath(observed);
+  const path = typeof observed === "string" ? observed : pathOf(observed);
   if (typeof path !== "string") {
     console.error("useTosi must either be passed a path or a tosijs proxy", observed);
     throw new Error("useTosi must either be passed a path or a tosijs proxy");
   }
   const [value, update] = useState(() => xin[path] !== undefined ? xin[path] : initialValue);
   useEffect(() => {
-    const listener = observe(path, () => {
-      update(xin[path]);
-    });
+    const sync = () => {
+      update(() => xin[path] !== undefined ? xin[path] : initialValue);
+    };
+    const listener = observe(path, sync);
+    sync();
     return () => {
       unobserve(listener);
     };
@@ -50,5 +54,5 @@ export {
   reactWebComponents
 };
 
-//# debugId=0EC1278CE5C1341F64756E2164756E21
+//# debugId=7432E59B6D54E22C64756E2164756E21
 //# sourceMappingURL=index.js.map
