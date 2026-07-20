@@ -6,14 +6,15 @@ absorbed forever).
 
 ## tosijs
 
-- **Proxy identity + change-tick seam** — tosijs mints a fresh Proxy per `xin[path]`
-  access. Per the maintainer this is deliberate and permanent (proxies are wafer-thin
-  wrappers on a string), so it's a design property, not a risk. The filed issue retains
-  **two** live asks: (a) document that guarantee, and (b) a change-tick /
-  subscribe+getSnapshot seam — which remains the **only** way to close `useTosi`'s
-  residual mount gap (an in-place mutation flushed pre-subscribe leaves raw identity
-  equal and is undetectable by the subscribe-time re-sync; see `src/use-tosi.ts` and the
-  1.2.0 CHANGELOG). A docs-only close would abandon (b) — don't.
+- **Proxy identity + change-tick seam — resolved by discussion, nothing owed upstream.**
+  Fresh-proxy-per-access is structural (proxies are created on access; nothing exists to
+  cache), so it needs no documented guarantee — just never use proxy identity for change
+  detection or memo keys. The bridge manufactures its own snapshot identity (re-wrap on
+  the way through — React's identity heuristic, fed from outside). The residual
+  unsubscribed-window gap is a *choice*, closable locally at any time by always-notify-
+  on-subscribe for object paths (one extra mount render); 1.2.0 prefers a raw-compare
+  with a narrow, self-healing miss. The change-tick seam in the issue is downgraded to a
+  low-priority test-introspection nicety — maintainer may close as by-design.
   Issue: https://github.com/tonioloewald/tosijs/issues/17
 - **Rename shims** — `src/use-tosi.ts` shims `tosiPath ?? xinPath` and
   `tosiValue ?? xinValue` (both spot-checked present at tosijs 1.0.6, not yet covered by
