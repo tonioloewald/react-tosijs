@@ -4,27 +4,45 @@
 
 ### Changed
 
-- **`useTosi` reimplemented on `useSyncExternalStore`.** No API change; the behavioral
-  improvements are all wins:
+- **`useTosi` reimplemented on `useSyncExternalStore`.** No API change; behavioral
+  improvements:
   - concurrent-rendering safe (no tearing);
   - switching the observed path across renders updates the value in the *same* render
     (previously one commit could pair the new path with the old value);
   - exactly one render on mount (previously object paths double-rendered);
-  - no missed updates between mount and subscription;
-  - a changed `initialValue` prop is respected by later reads;
-  - no-op touches on primitive paths no longer re-render.
+  - a tosijs flush landing before the hook subscribes (delayed passive effects, React 19
+    `<Activity hidden>`) is caught by a subscribe-time re-sync on raw values — the one
+    residual gap, an *in-place* mutation flushed pre-subscribe, is undetectable without
+    a change-tick seam in tosijs (tosijs#17);
+  - DOM-shimmed SSR/prerender (`renderToString`) works — `getServerSnapshot` is provided;
+  - a changed `initialValue` is used by later reads (it becomes visible on the next touch
+    of the path);
+  - no-op touches on primitive paths no longer re-render; touches on object- and
+    function-valued paths always propagate (in-place mutation preserves identity, so
+    they can't be deduped).
 - The hook no longer relies on tosijs proxy identity to detect in-place mutations — it
   manufactures its own snapshot identity per observer fire. (Fresh-proxy-per-access is a
   deliberate tosijs property regardless; proxies are wafer-thin and never cached.)
 - `HookType<T>` is now exported so consumers can name the return tuple.
+- `"sideEffects": false` for bundler tree-shaking.
 - README repositioned around the actual use case: an off-ramp from React — state and
   logic live in framework-free tosijs, and apps can migrate from React views to web
   components incrementally, with no sync layer and no big-bang rewrite.
 
 ### Added
 
-- Tests for the new guarantees: single render on mount, `setValue` referential
-  stability, and no-op-touch dedupe (21 tests total).
+- **Typed paths**: `typedTosi<AppState>()` returns a `useTosi` whose paths are
+  compile-time checked via template-literal types (`TosiPath<S>`, `TosiPathValue<S, P>`
+  exported for building your own helpers).
+- **`persist(path, options?)`** — hydrate a path from storage and write it back on
+  change (framework-free; returns a stop function).
+- **`connectDevTools({ roots })`** — stream path touches to the Redux DevTools
+  extension as path-labelled actions with raw-value snapshots.
+- `bun run typecheck` (type-level tests included) — now part of the `prepublishOnly`
+  gate alongside tests and build.
+- Tests for the new guarantees: store-contract (mount-gap re-sync), SSR smoke, object-
+  and function-path propagation, `initialValue` semantics, StrictMode, single mount
+  render, `setValue` stability, persist, and DevTools (35 tests total).
 
 ## 1.1.0 (2026-07-20)
 

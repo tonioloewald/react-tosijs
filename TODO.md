@@ -28,9 +28,14 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
   now gates publishes locally, but nothing gates pushes/PRs.
 - [ ] Add React 19 to the test matrix (peer range now allows `^19.0.0`; the suite runs
   against 18.3 only).
-- [ ] *(unverified)* Add `tests/use-tosi.types.ts` + a `typecheck` script — `tests/` is outside
-  tsconfig `include`, so public-type changes (optional initialValue, `class?`, generics)
-  are never typechecked.
+- [x] ~~Add type-level tests + a `typecheck` script~~ — **done in 1.2.0**
+  (`tests/types.typecheck.ts`, `tsconfig.typecheck.json`, in the prepublishOnly gate).
+- [ ] Per-touch observer work is O(N) in components subscribed to the same path (each
+  useTosi registers its own tosijs observer + does its own `xin[path]` resolution).
+  Fine at normal scale; a shared per-path store registry would make it O(1) if a
+  hot-list case ever shows up (efficiency lens lead, unverified).
+- [ ] Upgrade tosijs-ui to ≥ 1.7.0 when published, drop the `tjs-lang` devDependency
+  (see UPSTREAM.md — upstream fix shipped).
 - [ ] *(unverified)* Add eslint flat config with `eslint-plugin-react-hooks`
   (`exhaustive-deps: error`) — the 1.0.x resubscribe bug is exactly what that rule catches
   mechanically; eslint is a devDep with no config.
@@ -41,9 +46,14 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
 
 Hook internals — **all resolved by the 1.2.0 `useSyncExternalStore` rewrite** except:
 
-- [ ] Object-path value identity still changes on every observer fire (fresh proxy read
-  per change), so downstream `memo`/`useMemo` on the value re-runs per change. Inherent
-  to signaling in-place mutations; primitives are deduped. Document if it bites anyone.
+- [x] ~~Object-path identity churn breaks downstream memoization~~ — **measured 2026-07-20:
+  largely a non-issue.** `.map()` over an observed array yields the *raw* elements
+  (`mapped[0] === rawTodos[0]`), so the standard `todos.map(item => <Row item={item}/>)`
+  pattern passes identity-stable objects and `memo(Row)` works. The observed container
+  itself gets a new proxy identity per observer fire, but a fire means it changed —
+  re-rendering a memo'd child that receives the whole container is correct behavior.
+  (Direct member access through a proxy, `todosProxy[0]`, does mint fresh wrappers — by
+  design, for write tracking; don't use that identity as a memo key.)
 - [ ] *(unverified)* Share the createRoot/act render-and-cleanup scaffolding between the
   two test files via `tests/helpers.tsx` (must stay safe to import before `mock.module` —
   note that constraint in a doc comment).

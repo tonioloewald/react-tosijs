@@ -1,8 +1,12 @@
 /**
  * Regression test for the 1.0.x resubscribe-churn bug: useTosi's effect had no
  * dependency array, so every render unsubscribed and resubscribed its tosijs
- * observer. Wraps tosijs' observe/unobserve to count calls; must be its own
- * file so the mock is registered before src/use-tosi.ts imports tosijs.
+ * observer. Wraps tosijs' observe/unobserve to count calls.
+ *
+ * mock.module can't retro-wrap a module another test file already
+ * imported, and bun's test-file ordering is not something to depend on —
+ * so the library is imported with a cache-busting query, forcing a fresh
+ * evaluation whose tosijs import resolves to the mock.
  */
 import { describe, test, expect, mock } from "bun:test";
 import React, { act } from "react";
@@ -37,10 +41,13 @@ real.xinProxy({ churn: { value: "steady" } });
 
 describe("subscription lifecycle", () => {
   test("subscribes once per path, not once per render", async () => {
-    const { useTosi } = await import("../src/index");
+    // @ts-ignore — the query busts bun's module cache (see file comment);
+    // it must target use-tosi.ts itself, not index.ts, or the re-export
+    // resolves to the cached, unmocked module
+    const { useTosi } = await import("../src/use-tosi.ts?fresh-under-mock");
 
     const Value = () => {
-      const [value] = useTosi<string>("churn.value");
+      const [value] = useTosi("churn.value");
       return <div>{value}</div>;
     };
     const Parent = ({ generation }: { generation: number }) => (

@@ -48,8 +48,11 @@ was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
   preload in `bunfig.toml` (`tests/setup.ts` registers globals and sets
   `IS_REACT_ACT_ENVIRONMENT`). Run a single file with `bun test tests/use-tosi.test.tsx`.
   `tests/subscription-churn.test.tsx` must stay in its own file — it wraps the tosijs
-  module via `mock.module` before importing the library (and the mock factory must only
-  reference values captured *before* `mock.module` is called, or bun deadlocks).
+  module via `mock.module`, and since bun can't retro-wrap an already-imported module
+  (and test-file order is not dependable), it imports the library via a cache-busting
+  query (`../src/use-tosi.ts?fresh-under-mock` — must target use-tosi.ts, not index.ts,
+  or the re-export resolves to the cached unmocked module). The mock factory must only
+  reference values captured *before* `mock.module` is called, or bun deadlocks.
 - `npm publish` runs `prepublishOnly` (tests + build) automatically.
 
 There is no lint/format script (eslint/prettier are devDeps only).

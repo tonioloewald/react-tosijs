@@ -23,11 +23,11 @@ absorbed forever).
 
 ## tosijs-ui
 
-- **`tjs-lang/browser` dynamic import breaks consumer bundles** — bundling any demo that
-  imports tosijs-ui fails to resolve `tjs-lang/browser` (from the live-example module) unless
-  the consumer hand-installs `tjs-lang`; the error is unactionable and the optional-peer
-  range (`^0.9.0`) is stale. Workaround here: direct `tjs-lang` devDependency.
-  Issue: https://github.com/tonioloewald/tosijs-ui/issues/20
+- **`tjs-lang/browser` dynamic import breaks consumer bundles** — **RESOLVED upstream**
+  (fixed in tosijs-ui 1.7.0: imports made runtime-dynamic, peer range bumped, warn-once
+  message when absent). Workaround here: direct `tjs-lang` devDependency — **remove it
+  when this repo upgrades to tosijs-ui ≥ 1.7.0** (1.7.0 not yet on npm as of 2026-07-20).
+  Issue: https://github.com/tonioloewald/tosijs-ui/issues/20 (closed)
 
 ## react
 

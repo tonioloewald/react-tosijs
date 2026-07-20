@@ -1,12 +1,13 @@
 import { describe, test, expect, afterEach, spyOn } from "bun:test";
 import React, { act } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { xinProxy, updates, touch } from "tosijs";
+import { xin, xinProxy, updates, touch } from "tosijs";
 import {
   useTosi,
   useXin,
   reactWebComponents,
   _resolvePathOf,
+  _createStore,
 } from "../src/index";
 
 const { state } = xinProxy({
@@ -16,6 +17,7 @@ const { state } = xinProxy({
     todos: [{ id: 1, text: "write tests" }] as { id: number; text: string }[],
     first: "alpha",
     second: "beta",
+    gap: "before",
   },
 });
 
@@ -71,7 +73,11 @@ describe("useTosi", () => {
   test("accepts a tosijs proxy instead of a path", () => {
     const Todos = () => {
       const [todos] = useTosi(state.todos);
-      return <div>{todos.map((item) => item.text).join(", ")}</div>;
+      return (
+        <div>
+          {todos.map((item: { text: string }) => item.text).join(", ")}
+        </div>
+      );
     };
     const container = render(<Todos />);
     expect(container.textContent).toBe("write tests");
@@ -230,6 +236,78 @@ describe("useTosi", () => {
     expect(renders).toBe(1);
   });
 
+  test("object paths render exactly once on mount", async () => {
+    // regression: the 1.1.0 implementation double-rendered object paths
+    // (its post-observe sync always saw a fresh proxy identity)
+    let renders = 0;
+    const OnceObject = () => {
+      renders++;
+      const [todos] = useTosi<{ id: number; text: string }[]>("state.todos");
+      return <div>{todos.length}</div>;
+    };
+    render(<OnceObject />);
+    await flush();
+    expect(renders).toBe(1);
+  });
+
+  test("a touch on a function-valued path propagates", async () => {
+    (state as any).watchedFn = () => "v1";
+    await flush();
+    let renders = 0;
+    const FnWatcher = () => {
+      renders++;
+      const [fn] = useTosi<() => string>("state.watchedFn");
+      return <div>{fn()}</div>;
+    };
+    render(<FnWatcher />);
+    await flush();
+    const settled = renders;
+    // in-place mutation of a stored function can only be signaled by touch
+    await act(async () => {
+      touch("state.watchedFn");
+      await updates();
+    });
+    expect(renders).toBe(settled + 1);
+  });
+
+  test("a changed initialValue becomes visible on the next touch", async () => {
+    const Fallback = ({ fallback }: { fallback: string }) => {
+      const [value] = useTosi<string>("state.neverSet", fallback);
+      return <div>{value}</div>;
+    };
+    const container = render(<Fallback fallback="A" />);
+    expect(container.textContent).toBe("A");
+
+    const root = roots[roots.length - 1];
+    act(() => {
+      root.render(<Fallback fallback="B" />);
+    });
+    // documented contract: the new fallback applies to later reads
+    expect(container.textContent).toBe("A");
+
+    await act(async () => {
+      touch("state.neverSet");
+      await updates();
+    });
+    expect(container.textContent).toBe("B");
+  });
+
+  test("works under StrictMode", async () => {
+    const Strict = () => {
+      const [first] = useTosi<string>("state.first");
+      return <div>{first}</div>;
+    };
+    const container = render(
+      <React.StrictMode>
+        <Strict />
+      </React.StrictMode>,
+    );
+    expect(container.textContent).toBe(String(state.first));
+    state.first = "strict-updated";
+    await flush();
+    expect(container.textContent).toBe("strict-updated");
+  });
+
   test("setValue is referentially stable across re-renders", async () => {
     const setters: any[] = [];
     const Stable = ({ generation }: { generation: number }) => {
@@ -261,6 +339,36 @@ describe("useTosi", () => {
       await updates();
     });
     expect(renders).toBe(settled);
+  });
+});
+
+describe("_createStore (useSyncExternalStore contract)", () => {
+  test("a flush that lands while unsubscribed is caught at subscribe time", async () => {
+    const store = _createStore<string>("state.gap", () => xin["state.gap"]);
+    expect(store.getSnapshot().value).toBe("before");
+
+    // touch and flush with no subscriber — the mount-to-subscription gap
+    state.gap = "after";
+    await updates();
+    // unsubscribed store still holds the stale snapshot
+    expect(store.getSnapshot().value).toBe("before");
+
+    let notified = 0;
+    const unsubscribe = store.subscribe(() => notified++);
+    // subscribe-time re-sync must surface the missed change
+    expect(notified).toBe(1);
+    expect(store.getSnapshot().value).toBe("after");
+    unsubscribe();
+  });
+
+  test("subscribe-time re-sync does not fire for an unchanged object", async () => {
+    const store = _createStore("state.todos", () => xin["state.todos"]);
+    let notified = 0;
+    const unsubscribe = store.subscribe(() => notified++);
+    // raw value unchanged since the snapshot was taken — no spurious
+    // notification even though the proxy identity is fresh
+    expect(notified).toBe(0);
+    unsubscribe();
   });
 });
 

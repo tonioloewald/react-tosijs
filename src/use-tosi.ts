@@ -29,9 +29,67 @@ export const _resolvePathOf = (t: {
 
 const pathOf = _resolvePathOf(tosijs as any);
 
+// tosiValue (né xinValue) unwraps a proxy to the raw underlying data;
+// identity fallback for hypothetical versions with neither
+export const _resolveValueOf = (t: {
+  tosiValue?: (x: any) => any;
+  xinValue?: (x: any) => any;
+}): ((x: any) => any) => t.tosiValue ?? t.xinValue ?? ((x: any) => x);
+
+const valueOf = _resolveValueOf(tosijs as any);
+
 export type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
 
 const BAD_ARGUMENT = "useTosi must either be passed a path or a tosijs proxy";
+
+/**
+ * The useSyncExternalStore contract for one observed path. Exported for
+ * tests (the mount-to-subscription gap can't be opened under act(), which
+ * flushes effects synchronously).
+ *
+ * getSnapshot must return a stable value between store changes, and
+ * xin[path] mints a fresh proxy per access (deliberate tosijs behavior —
+ * proxies are wafer-thin, never cached) — so reads are cached in a
+ * `{ value }` wrapper that is only replaced when something changed. The
+ * wrapper's identity change is also what signals in-place mutations
+ * (push, property writes), which leave the underlying raw value identical.
+ */
+export const _createStore = <T,>(path: string, read: () => T) => {
+  let snapshot = { value: read() };
+  // objects and functions always propagate — in-place mutation preserves
+  // their identity, so Object.is can't distinguish touch-worthy changes
+  const changed = (next: T): boolean =>
+    (typeof next === "object" && next !== null) ||
+    typeof next === "function" ||
+    !Object.is(next, snapshot.value);
+  return {
+    subscribe: (onStoreChange: () => void) => {
+      const listener = observe(path, () => {
+        const next = read();
+        if (changed(next)) {
+          snapshot = { value: next };
+          onStoreChange();
+        }
+      });
+      // a tosijs flush can land while the hook is unsubscribed (delayed
+      // passive effects, React 19 <Activity hidden>) — re-sync so React's
+      // post-subscribe consistency check sees it. Compared on RAW values
+      // (not proxy identity) so an unchanged object doesn't cause a second
+      // mount render; the residual gap — an in-place mutation flushed
+      // pre-subscribe — leaves raw identity equal and is not detectable
+      // here, only narrowable via tosijs#17's requested seam.
+      const next = read();
+      if (!Object.is(valueOf(next), valueOf(snapshot.value))) {
+        snapshot = { value: next };
+        onStoreChange();
+      }
+      return () => {
+        unobserve(listener);
+      };
+    },
+    getSnapshot: () => snapshot,
+  };
+};
 
 export const useTosi = function <T = any>(
   observed: XinTouchableType,
@@ -47,38 +105,22 @@ export const useTosi = function <T = any>(
   const initialValueRef = useRef(initialValue);
   initialValueRef.current = initialValue;
 
-  const store = useMemo(() => {
-    const read = (): T =>
-      xin[path] !== undefined ? xin[path] : (initialValueRef.current as T);
-    // useSyncExternalStore requires getSnapshot to return a stable value
-    // between store changes, and xin[path] mints a fresh proxy per access —
-    // so the snapshot wrapper is only replaced when the observer fires.
-    // Its identity change is also what signals in-place mutations (push,
-    // property writes), which leave the underlying raw value identical.
-    let snapshot = { value: read() };
-    return {
-      subscribe: (onStoreChange: () => void) => {
-        const listener = observe(path, () => {
-          const next = read();
-          // skip no-op touches for primitives; objects/functions can't be
-          // deduped by identity (in-place mutations preserve it)
-          if (
-            (typeof next === "object" && next !== null) ||
-            !Object.is(next, snapshot.value)
-          ) {
-            snapshot = { value: next };
-            onStoreChange();
-          }
-        });
-        return () => {
-          unobserve(listener);
-        };
-      },
-      getSnapshot: () => snapshot,
-    };
-  }, [path]);
+  const store = useMemo(
+    () =>
+      _createStore<T>(path, () =>
+        xin[path] !== undefined ? xin[path] : (initialValueRef.current as T),
+      ),
+    [path],
+  );
 
-  const { value } = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  // server and client reads coincide (tosijs needs DOM globals to load at
+  // all, so SSR means a DOM-shimmed pipeline) — getServerSnapshot keeps
+  // renderToString/prerender working
+  const { value } = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot,
+  );
 
   const setValue = useCallback(
     (newValue: T): void => {

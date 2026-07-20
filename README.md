@@ -39,6 +39,11 @@ It provides two things:
 There is no step where you maintain two sources of truth, write a sync layer, or do a
 big-bang rewrite.
 
+> Worth noting: tosijs does change detection at the DOM-update seam (an unchanged bound
+> value is a no-op at write time), while React requires answering "did it change?" at the
+> subscription source. The bridge's internal machinery exists to pay React's toll on
+> React's behalf — deleting React deletes the toll.
+
 ## useTosi in two minutes
 
 Pass any object to `xinProxy`, then access it exactly like you would via `useState`
@@ -162,11 +167,59 @@ const Doc = () => <Markdown class="doc" src="/README.md" />
 > React 18 sets props on custom elements as attributes verbatim. React 19
 > handles `className` on custom elements natively.
 
+## Typed paths
+
+Paths are serializable, loggable, and framework-free — and with a state shape they're
+also compile-time checked:
+
+```ts
+import { typedTosi } from 'react-tosijs'
+
+type AppState = {
+  app: { count: number; todos: { id: string; text: string }[] }
+}
+
+const { useTosi } = typedTosi<AppState>()
+
+const [text] = useTosi('app.todos[0].text') // text: string
+const [oops] = useTosi('app.cuont')         // compile error
+```
+
+`TosiPath<S>` and `TosiPathValue<S, P>` are exported for building your own typed helpers.
+
+## Persistence
+
+`persist` hydrates a path from storage and writes it back on every change. It's
+framework-free — it works identically whether the path is rendered by React, web
+components, or nothing at all:
+
+```ts
+import { persist } from 'react-tosijs'
+
+const stop = persist('app.todos') // localStorage, key "tosijs:app.todos"
+```
+
+## Redux DevTools
+
+`connectDevTools` streams path touches to the Redux DevTools extension — each touched
+path becomes an action (the path string is the action type) with a raw-value snapshot
+of the roots you name:
+
+```ts
+import { connectDevTools } from 'react-tosijs'
+
+const disconnect = connectDevTools({ roots: ['app'] })
+```
+
+It's a debugging tap, not a time-travel store; it no-ops when the extension is absent.
+
 ## Compatibility
 
 - **React** `^18.2.0 || ^19.0.0` (the hook is built on `useSyncExternalStore`).
 - **tosijs** `^1.0.6` — the library uses `tosiPath` when available (tosijs ≥ 1.1) and
   falls back to `xinPath` on older versions.
+- **SSR**: tosijs needs DOM globals to load, so server rendering means a DOM-shimmed
+  pipeline (happy-dom, jsdom) — `renderToString` works there.
 
 ## Development
 
