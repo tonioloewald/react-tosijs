@@ -2,28 +2,28 @@
 import {
   useState,
   useEffect,
+  useCallback,
   createElement
 } from "react";
-import { xin, observe, unobserve, xinPath } from "tosijs";
+import { xin, observe, unobserve, tosiPath } from "tosijs";
 var useTosi = function(observed, initialValue) {
-  const path = typeof observed === "string" ? observed : xinPath(observed);
+  const path = typeof observed === "string" ? observed : tosiPath(observed);
   if (typeof path !== "string") {
-    console.error("useXin must either be passed a path or a XinProxy", observed);
-    throw new Error("useXin must either be passed a path or a XinProxy");
+    console.error("useTosi must either be passed a path or a tosijs proxy", observed);
+    throw new Error("useTosi must either be passed a path or a tosijs proxy");
   }
-  const [value, update] = useState(xin[path] !== undefined ? xin[path] : initialValue);
+  const [value, update] = useState(() => xin[path] !== undefined ? xin[path] : initialValue);
   useEffect(() => {
-    const observer = () => {
+    const listener = observe(path, () => {
       update(xin[path]);
-    };
-    const listener = observe(path, observer);
+    });
     return () => {
       unobserve(listener);
     };
-  });
-  const setValue = (value2) => {
-    xin[path] = value2;
-  };
+  }, [path]);
+  const setValue = useCallback((newValue) => {
+    xin[path] = newValue;
+  }, [path]);
   return [value, setValue];
 };
 var useXin = useTosi;
@@ -42,7 +42,7 @@ var reactWebComponents = new Proxy({}, {
   }
 });
 // src/version.ts
-var version = "1.0.3";
+var version = "1.1.0";
 export {
   version,
   useXin,
@@ -50,5 +50,5 @@ export {
   reactWebComponents
 };
 
-//# debugId=9794CB9F6B63057264756E2164756E21
+//# debugId=0EC1278CE5C1341F64756E2164756E21
 //# sourceMappingURL=index.js.map

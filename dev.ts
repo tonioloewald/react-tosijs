@@ -70,10 +70,18 @@ async function build() {
   console.timeEnd("build");
 }
 
-watch("./src").on("change", build);
-watch("./demo").on("change", prebuild);
+const buildOnly = process.argv.includes("--build");
+
+if (!buildOnly) {
+  watch("./src").on("change", build);
+  watch("./demo").on("change", prebuild);
+}
 
 await prebuild();
+
+if (buildOnly) {
+  process.exit(0);
+}
 
 function serveFromDir(config: {
   directory: string;

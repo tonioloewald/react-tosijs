@@ -14,11 +14,10 @@
     "allowJs": true,
     "types": [
       "bun-types", // add Bun global
-      "@types/jsdom"
+      "react",
+      "react-dom"
     ]
   },
-  "allowJs": true,
-  "files": ["./node_modules/@types/react/index.d.ts"],
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.json"],
   "exclude": ["node_modules", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
