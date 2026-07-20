@@ -10,10 +10,23 @@ import * as tosijs from "tosijs";
 import type { XinTouchableType } from "tosijs";
 
 const { xin, observe, unobserve } = tosijs;
+
 // tosiPath arrived in tosijs 1.1; fall back to xinPath so the wide
-// peer range (^1.0.6) keeps working
-const pathOf: (x: any) => string | undefined =
-  (tosijs as any).tosiPath ?? (tosijs as any).xinPath;
+// peer range (^1.0.6) keeps working. Exported for tests only.
+export const _resolvePathOf = (t: {
+  tosiPath?: (x: any) => string | undefined;
+  xinPath?: (x: any) => string | undefined;
+}): ((x: any) => string | undefined) => {
+  const fn = t.tosiPath ?? t.xinPath;
+  if (fn === undefined) {
+    throw new Error(
+      "react-tosijs requires tosijs ^1.0.6 (found neither tosiPath nor xinPath export)",
+    );
+  }
+  return fn;
+};
+
+const pathOf = _resolvePathOf(tosijs as any);
 
 type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
 

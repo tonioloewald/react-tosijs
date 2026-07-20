@@ -9,17 +9,14 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import * as tosijsNamespace from "tosijs";
 
-// capture the real module into a plain object BEFORE mock.module so the
-// factory never touches the (re-bound) mocked namespace
-const real = {
-  xin: tosijsNamespace.xin,
-  xinProxy: tosijsNamespace.xinProxy,
-  tosiPath: (tosijsNamespace as any).tosiPath,
-  xinPath: (tosijsNamespace as any).xinPath,
-  updates: tosijsNamespace.updates,
-  observe: tosijsNamespace.observe,
-  unobserve: tosijsNamespace.unobserve,
-};
+// capture the FULL real module into a plain object BEFORE mock.module —
+// the factory must never touch the (re-bound) mocked namespace (bun
+// deadlocks), and the mock must re-export everything because it leaks
+// into test files that run later in the same process
+const real: any = {};
+for (const key of Object.keys(tosijsNamespace)) {
+  real[key] = (tosijsNamespace as any)[key];
+}
 
 let observeCalls = 0;
 let unobserveCalls = 0;

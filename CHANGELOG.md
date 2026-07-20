@@ -28,9 +28,10 @@
 
 ### Added
 
-- Test suite (`bun test`, happy-dom): 13 tests covering value reads, initial-value
+- Test suite (`bun test`, happy-dom): 18 tests covering value reads, initial-value
   fallback, proxy arguments, external mutation, cross-component writes, path
-  switching, subscription lifecycle (no resubscribe churn), unmount cleanup, and
+  switching, function values (stored, never invoked), subscription lifecycle (no
+  resubscribe churn), unmount cleanup, the tosijs `^1.0.6` compatibility shim, and
   `reactWebComponents`.
 - `bun run build` — one-shot build (previously the only option was the watch server).
 - `prepublishOnly` gate: tests + build run before any `npm publish`.

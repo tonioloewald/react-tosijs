@@ -37,6 +37,23 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
 - [ ] *(unverified)* Refactor the unmount test to stop reaching into the render helper's
   internal `roots`/`containers` arrays; have `render()` return `{ container, unmount }` (nit).
 
+## From the confirmation review (2026-07-20, unverified unless noted)
+
+- [ ] *(unverified)* Export the hook's return tuple type (e.g. `TosiHookResult<T>`) so
+  consumers can name it.
+- [ ] *(unverified)* Assert `setValue` referential stability across re-renders in the churn
+  test — removing the `useCallback` currently passes the suite.
+- [ ] *(unverified)* Committed `dist/` has no freshness gate — add CI
+  `bun run build && git diff --exit-code dist/`, or stop committing dist and use `prepare`.
+- [ ] *(unverified)* Demo bundle is ~1.15MB minified because the demo imports all of
+  tosijs-ui; use per-component entry points if available (demo-site-only).
+- [ ] *(unverified)* Ask on tosijs-ui: does the `tosijs-ui/site` builder support a
+  bring-your-own-bundle React demo with static-asset exclusions? dev.ts hand-rolls ~120
+  lines the ecosystem may already centralize.
+- [ ] *(unverified)* Comment on tosijs#17 asking that the subscription seam include
+  test-suitable introspection (observer count per path) so churn tests stop needing the
+  `mock.module` namespace-snapshot dance.
+
 ## Docs / hygiene
 
 - [ ] *(unverified)* README.md and `demo/static/use-tosi.md` are drifting duplicates (the
@@ -49,4 +66,5 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
 
 - `tjs-lang` devDep flagged *(unverified)* as unused — it is **required**: tosijs-ui's
   live-example module dynamically imports `tjs-lang/browser` and the demo build fails to
-  resolve without it (verified during the 1.1.0 respin).
+  resolve without it (verified during the 1.1.0 respin). Now filed upstream — see
+  UPSTREAM.md (tosijs-ui#20).

@@ -2,7 +2,12 @@ import { describe, test, expect, afterEach, spyOn } from "bun:test";
 import React, { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { xinProxy, updates } from "tosijs";
-import { useTosi, useXin, reactWebComponents } from "../src/index";
+import {
+  useTosi,
+  useXin,
+  reactWebComponents,
+  _resolvePathOf,
+} from "../src/index";
 
 const { state } = xinProxy({
   state: {
@@ -158,6 +163,40 @@ describe("useTosi", () => {
     expect(container.textContent).toBe("");
   });
 
+  test("function values are stored as values, not invoked as updaters", async () => {
+    const fn1 = () => "first";
+    const fn2 = () => "second";
+    (state as any).callback = fn1;
+    await flush();
+
+    let hookValue: any;
+    const FnHolder = () => {
+      const [callback] = useTosi<() => string>("state.callback");
+      hookValue = callback;
+      return <div>{typeof callback}</div>;
+    };
+    const container = render(<FnHolder />);
+    expect(container.textContent).toBe("function");
+    expect(hookValue()).toBe("first");
+
+    (state as any).callback = fn2;
+    await flush();
+    expect(hookValue()).toBe("second");
+  });
+
+  test("a function passed as initialValue is not invoked", () => {
+    const fnInit = () => "initial";
+    let hookValue: any;
+    const FnFallback = () => {
+      const [callback] = useTosi<() => string>("state.missingFn", fnInit);
+      hookValue = callback;
+      return <div>{typeof callback}</div>;
+    };
+    const container = render(<FnFallback />);
+    expect(container.textContent).toBe("function");
+    expect(hookValue()).toBe("initial");
+  });
+
   test("throws when passed something that is neither path nor proxy", () => {
     // the throw is intentional — keep React's error-boundary advice and our
     // own console.error out of the test output
@@ -177,6 +216,25 @@ describe("useTosi", () => {
 
   test("useXin is a deprecated alias for useTosi", () => {
     expect(useXin).toBe(useTosi);
+  });
+});
+
+describe("_resolvePathOf (tosijs ^1.0.6 compatibility shim)", () => {
+  const tosi = (x: any) => "via-tosiPath";
+  const xin = (x: any) => "via-xinPath";
+
+  test("prefers tosiPath when present", () => {
+    expect(_resolvePathOf({ tosiPath: tosi, xinPath: xin })).toBe(tosi);
+  });
+
+  test("falls back to xinPath on tosijs 1.0.x", () => {
+    expect(_resolvePathOf({ xinPath: xin })).toBe(xin);
+  });
+
+  test("throws a clear error when neither export exists", () => {
+    expect(() => _resolvePathOf({})).toThrow(
+      "react-tosijs requires tosijs ^1.0.6",
+    );
   });
 });
 

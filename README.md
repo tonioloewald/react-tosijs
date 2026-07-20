@@ -45,6 +45,10 @@ const Clock = () => {
 }
 ```
 
+One difference from `useState`: `setValue` takes the next **value**, not an
+updater function — `setCount(c => c + 1)` would store the function itself
+(tosijs state legitimately holds functions, so they are never auto-invoked).
+
 Note that `useTosi` returns `[value, setValue]` just as `useState` does
 (and if you wanted to write a more complex self-contained `<Clock>` that
 sets up and tears down setInterval then nothing is stopping you except

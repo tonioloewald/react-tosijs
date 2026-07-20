@@ -15,8 +15,19 @@ absorbed forever).
   Local mitigation tracked in TODO.md (reimplement on `useSyncExternalStore`).
 
 - **`tosiPath` availability** — `tosiPath` arrived in tosijs 1.1; to keep the wide `^1.0.6`
-  peer range honest, `src/use-tosi.ts` shims `tosiPath ?? xinPath` via a namespace import.
-  No issue needed (deliberate back-compat, remove the shim when the peer floor moves to ≥1.1).
+  peer range honest, `src/use-tosi.ts` shims `tosiPath ?? xinPath` (unit-tested via
+  `_resolvePathOf`). No issue needed (deliberate back-compat; remove the shim when the peer
+  floor moves to ≥1.1). Verified floor: tosijs@1.0.6 passed the full suite ad hoc during the
+  v1.1.0 review (via the xinPath branch, fresh-proxy behavior included) — not yet covered
+  by CI (see TODO.md test matrix).
+
+## tosijs-ui
+
+- **`tjs-lang/browser` dynamic import breaks consumer bundles** — bundling any demo that
+  imports tosijs-ui fails to resolve `tjs-lang/browser` (from the live-example module) unless
+  the consumer hand-installs `tjs-lang`; the error is unactionable and the optional-peer
+  range (`^0.9.0`) is stale. Workaround here: direct `tjs-lang` devDependency.
+  Issue: https://github.com/tonioloewald/tosijs-ui/issues/20
 
 ## react
 

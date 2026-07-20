@@ -13,7 +13,7 @@ elements. This is insanely simpler than dealing with hooks and providers, allows
 you to integrate code libraries with React without complex adapters, and just makes
 life better in general.
 
-The **Reminders** demo, [demo/todo.tsx](https://github.com/tonioloewald/react-tosijs/blob/main/demo/src/todo.tsx),
+The **Reminders** demo, [demo/src/todo.tsx](https://github.com/tonioloewald/react-tosijs/blob/main/demo/src/todo.tsx),
 shows how you can sync state between a vanilla js model and pure functional components using `useTosi()`.
 
 You can also go into your browser's console and see the `app` proxy that is synced to the React UI elements
@@ -52,8 +52,11 @@ and provides a library [tosijs-ui](https://ui.tosijs.net) with lots of useful we
 lets you use [tosijs blueprints](https://tosijs.net/?blueprint-loader.ts) to dynamically load web-components as needed,
 this is a Very Good Thing™.
 
-[demo/index.tsx](https://github.com/tonioloewald/react-tosijs/blob/main/demo/src/index.tsx) shows how you can
+[demo/src/index.tsx](https://github.com/tonioloewald/react-tosijs/blob/main/demo/src/index.tsx) shows how you can
 turn web components (both lottie animation component at the top of the demo and the markdown component
 that is rendering this text) into React functional components using the `reactWebComponents` proxy.
+
+> Note: on React 18, pass `class` (not `className`) to web components — React 18 sets props
+> on custom elements as attributes verbatim. React 19 handles `className` natively.
 
 `react-tosijs` is copyright ©2023-2026 Tonio Loewald

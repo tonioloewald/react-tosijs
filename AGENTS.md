@@ -11,5 +11,6 @@
 > voice concerns, flag inconsistencies, and suggest improvements as you work. Continuous
 > improvement is the goal — see the repo's `CONTRIBUTING.md`.
 
-This project has no other agent doc yet; the shared practices above are the baseline.
-Add project-specific instructions here as they emerge.
+Project-specific practices live in `CLAUDE.md` (build system, test harness gotchas,
+follow-up routing). Deferred work is tracked in `TODO.md`; upstream workarounds and their
+filed issues in `UPSTREAM.md`.

@@ -7,7 +7,14 @@ import {
 } from "react";
 import * as tosijs from "tosijs";
 var { xin, observe, unobserve } = tosijs;
-var pathOf = tosijs.tosiPath ?? tosijs.xinPath;
+var _resolvePathOf = (t) => {
+  const fn = t.tosiPath ?? t.xinPath;
+  if (fn === undefined) {
+    throw new Error("react-tosijs requires tosijs ^1.0.6 (found neither tosiPath nor xinPath export)");
+  }
+  return fn;
+};
+var pathOf = _resolvePathOf(tosijs);
 var useTosi = function(observed, initialValue) {
   const path = typeof observed === "string" ? observed : pathOf(observed);
   if (typeof path !== "string") {
@@ -51,8 +58,9 @@ export {
   version,
   useXin,
   useTosi,
-  reactWebComponents
+  reactWebComponents,
+  _resolvePathOf
 };
 
-//# debugId=7432E59B6D54E22C64756E2164756E21
+//# debugId=B7071837C688297D64756E2164756E21
 //# sourceMappingURL=index.js.map

@@ -23,8 +23,9 @@ async function prebuild() {
   await $`rm -rf ${PUBLIC}`;
   await $`mkdir ${PUBLIC}`;
   await $`cp ./demo/static/* ${PUBLIC}`;
-  // design sources (Amadine etc.) stay out of the published site
-  await $`rm -f ${PUBLIC}/*.amdc`;
+  // design sources (Amadine etc.) stay out of the published site;
+  // nothrow because Bun's shell errors on globs with no matches
+  await $`rm -f ${PUBLIC}/*.amdc`.nothrow();
 
   await $`rm -rf ${DIST}`;
   await $`mkdir ${DIST}`;
