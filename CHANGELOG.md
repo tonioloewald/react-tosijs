@@ -15,7 +15,9 @@
 ### Changed
 
 - **Repo renamed**: `react-xinjs` → `react-tosijs` on GitHub (matching the earlier
-  `xinjs` → `tosijs` package rename). Update your remotes if you have a clone.
+  `xinjs` → `tosijs` package rename); `repository.url` updated (closes #2). The old npm
+  packages (`react-xinjs`, `xinjs`, `xinjs-ui`) are deprecated with pointers to their
+  successors. Update your remotes if you have a clone.
 - React peer dependency widened to `^18.2.0 || ^19.0.0`.
 - tosijs peer dependency remains `^1.0.6` — the library now uses `tosiPath` when
   available (tosijs ≥ 1.1) and falls back to `xinPath` on older versions, so no

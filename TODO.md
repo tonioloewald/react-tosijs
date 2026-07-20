@@ -39,6 +39,28 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
 
 ## From the confirmation review (2026-07-20, unverified unless noted)
 
+Hook internals (sanity-check each, then fix or document):
+
+- [ ] *(unverified)* Path switch commits one render pairing the new path with the old
+  path's value — in-browser this paints one frame of the wrong record. Sync during render
+  on path change (prev-props pattern) or migrate to `useSyncExternalStore`; at minimum
+  document the one-commit lag.
+- [ ] *(unverified)* `sync()` closes over `initialValue` from the render the `[path]`-keyed
+  effect last ran, so a changed fallback prop is ignored when the path later becomes
+  undefined. Keep `initialValue` in a ref read inside `sync()`.
+- [ ] *(unverified)* Object/array paths: guaranteed mount double-render (subscribe-time
+  `sync()` never bails — `xin[path]` mints a fresh proxy per access) and value identity
+  changes on every observer fire, breaking downstream memoization. Track the raw value
+  (`xinValue`) in a ref and skip `update()` when unchanged.
+- [ ] *(unverified)* Extract one `read()` closure for the duplicated
+  `xin[path] !== undefined ? xin[path] : initialValue` expression; hoist the doubled
+  error string into a const (nit).
+- [ ] *(unverified)* Share the createRoot/act render-and-cleanup scaffolding between the
+  two test files via `tests/helpers.tsx` (must stay safe to import before `mock.module` —
+  note that constraint in a doc comment).
+
+Other:
+
 - [ ] *(unverified)* Export the hook's return tuple type (e.g. `TosiHookResult<T>`) so
   consumers can name it.
 - [ ] *(unverified)* Assert `setValue` referential stability across re-renders in the churn

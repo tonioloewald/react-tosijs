@@ -17,10 +17,13 @@ https://github.com/tonioloewald/tosijs-coding-practices (checked out locally at
 was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
 
 - `useTosi(pathOrProxy, initialValue?)` — a `useState`-shaped hook (`[value, setValue]`)
-  backed by the global `xin` proxy. It resolves its argument to a tosijs path, subscribes via
-  `observe`/`unobserve` in a `useEffect` keyed on the path, and writes through `xin[path]`.
-  State can be mutated outside React and components re-render. `useXin` is a deprecated
-  back-compat alias.
+  backed by the global `xin` proxy. It resolves its argument to a tosijs path (via a
+  `tosiPath ?? xinPath` shim, `_resolvePathOf`, exported for tests — it keeps the wide
+  `^1.0.6` tosijs peer range honest), subscribes via `observe`/`unobserve` in a `useEffect`
+  keyed on the path, re-syncs on subscribe (tosijs observers never fire on registration),
+  and writes through `xin[path]`. `setValue` takes the next value, never a `useState`-style
+  updater — function values are legitimate state and are stored, not invoked. State can be
+  mutated outside React and components re-render. `useXin` is a deprecated back-compat alias.
 - `reactWebComponents` — a Proxy that turns camelCase property access (e.g. `.xinLottie`)
   into a React function component rendering the corresponding kebab-case custom element
   (`<xin-lottie>`), for using web components (e.g. `tosijs-ui`) from React without wrappers.
