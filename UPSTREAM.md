@@ -6,13 +6,13 @@ absorbed forever).
 
 ## tosijs
 
-- **Proxy-identity coupling** — `useTosi`'s re-rendering after in-place mutations depends on
-  tosijs minting a fresh Proxy per `xin[path]` access (verified:
-  `Object.is(xin[p], xin[p]) === false`), which is undocumented and could change as a perf
-  optimization. Asked for a documented guarantee or a `useSyncExternalStore`-friendly seam
-  (per-path change tick / subscribe+getSnapshot).
+- **Proxy identity** — tosijs mints a fresh Proxy per `xin[path]` access. Per the
+  maintainer this is deliberate and permanent (proxies are wafer-thin wrappers on a
+  string; caching them would buy nothing), so it's a design property, not a risk — the
+  remaining value of the filed issue is simply documenting the guarantee. As of 1.2.0
+  `useTosi` no longer depends on it anyway: the `useSyncExternalStore` snapshot wrapper
+  manufactures its own identity change per observer fire.
   Issue: https://github.com/tonioloewald/tosijs/issues/17
-  Local mitigation tracked in TODO.md (reimplement on `useSyncExternalStore`).
 
 - **`tosiPath` availability** — `tosiPath` arrived in tosijs 1.1; to keep the wide `^1.0.6`
   peer range honest, `src/use-tosi.ts` shims `tosiPath ?? xinPath` (unit-tested via

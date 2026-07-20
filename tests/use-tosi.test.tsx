@@ -1,7 +1,7 @@
 import { describe, test, expect, afterEach, spyOn } from "bun:test";
 import React, { act } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { xinProxy, updates } from "tosijs";
+import { xinProxy, updates, touch } from "tosijs";
 import {
   useTosi,
   useXin,
@@ -216,6 +216,51 @@ describe("useTosi", () => {
 
   test("useXin is a deprecated alias for useTosi", () => {
     expect(useXin).toBe(useTosi);
+  });
+
+  test("renders exactly once on mount", async () => {
+    let renders = 0;
+    const Once = () => {
+      renders++;
+      const [greeting] = useTosi<string>("state.greeting");
+      return <div>{greeting}</div>;
+    };
+    render(<Once />);
+    await flush();
+    expect(renders).toBe(1);
+  });
+
+  test("setValue is referentially stable across re-renders", async () => {
+    const setters: any[] = [];
+    const Stable = ({ generation }: { generation: number }) => {
+      const [, setCount] = useTosi<number>("state.count");
+      setters.push(setCount);
+      return <div>{generation}</div>;
+    };
+    render(<Stable generation={0} />);
+    const root = roots[roots.length - 1];
+    act(() => {
+      root.render(<Stable generation={1} />);
+    });
+    expect(setters.length).toBe(2);
+    expect(setters[1]).toBe(setters[0]);
+  });
+
+  test("a no-op touch of a primitive path does not re-render", async () => {
+    let renders = 0;
+    const Quiet = () => {
+      renders++;
+      const [count] = useTosi<number>("state.count");
+      return <div>{count}</div>;
+    };
+    render(<Quiet />);
+    await flush();
+    const settled = renders;
+    await act(async () => {
+      touch("state.count");
+      await updates();
+    });
+    expect(renders).toBe(settled);
   });
 });
 

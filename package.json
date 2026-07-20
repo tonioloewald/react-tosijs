@@ -1,6 +1,6 @@
 {
   "name": "react-tosijs",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Incredibly simple, powerful, and efficient state management for React…",
   "exports": {
     "types": "./dist/index.d.ts",

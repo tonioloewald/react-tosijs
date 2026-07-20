@@ -1,7 +1,8 @@
 import React, {
-  useState,
-  useEffect,
   useCallback,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
   createElement,
   FunctionComponent,
   ComponentPropsWithRef,
@@ -28,7 +29,9 @@ export const _resolvePathOf = (t: {
 
 const pathOf = _resolvePathOf(tosijs as any);
 
-type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
+export type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
+
+const BAD_ARGUMENT = "useTosi must either be passed a path or a tosijs proxy";
 
 export const useTosi = function <T = any>(
   observed: XinTouchableType,
@@ -36,29 +39,47 @@ export const useTosi = function <T = any>(
 ): HookType<T> {
   const path = typeof observed === "string" ? observed : pathOf(observed);
   if (typeof path !== "string") {
-    console.error(
-      "useTosi must either be passed a path or a tosijs proxy",
-      observed,
-    );
-    throw new Error("useTosi must either be passed a path or a tosijs proxy");
+    console.error(BAD_ARGUMENT, observed);
+    throw new Error(BAD_ARGUMENT);
   }
-  const [value, update] = useState<T>(() =>
-    xin[path] !== undefined ? xin[path] : initialValue,
-  );
-  useEffect(() => {
-    // the updater form keeps function values stored as values, not
-    // invoked as updaters
-    const sync = (): void => {
-      update(() => (xin[path] !== undefined ? xin[path] : initialValue));
-    };
-    const listener = observe(path, sync);
-    // observe() only fires on touch — sync now in case the path changed
-    // since the last committed render
-    sync();
-    return () => {
-      unobserve(listener);
+
+  // a ref so a changed fallback prop is seen by later reads
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
+
+  const store = useMemo(() => {
+    const read = (): T =>
+      xin[path] !== undefined ? xin[path] : (initialValueRef.current as T);
+    // useSyncExternalStore requires getSnapshot to return a stable value
+    // between store changes, and xin[path] mints a fresh proxy per access —
+    // so the snapshot wrapper is only replaced when the observer fires.
+    // Its identity change is also what signals in-place mutations (push,
+    // property writes), which leave the underlying raw value identical.
+    let snapshot = { value: read() };
+    return {
+      subscribe: (onStoreChange: () => void) => {
+        const listener = observe(path, () => {
+          const next = read();
+          // skip no-op touches for primitives; objects/functions can't be
+          // deduped by identity (in-place mutations preserve it)
+          if (
+            (typeof next === "object" && next !== null) ||
+            !Object.is(next, snapshot.value)
+          ) {
+            snapshot = { value: next };
+            onStoreChange();
+          }
+        });
+        return () => {
+          unobserve(listener);
+        };
+      },
+      getSnapshot: () => snapshot,
     };
   }, [path]);
+
+  const { value } = useSyncExternalStore(store.subscribe, store.getSnapshot);
+
   const setValue = useCallback(
     (newValue: T): void => {
       xin[path] = newValue;

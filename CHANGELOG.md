@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.2.0 (2026-07-20)
+
+### Changed
+
+- **`useTosi` reimplemented on `useSyncExternalStore`.** No API change; the behavioral
+  improvements are all wins:
+  - concurrent-rendering safe (no tearing);
+  - switching the observed path across renders updates the value in the *same* render
+    (previously one commit could pair the new path with the old value);
+  - exactly one render on mount (previously object paths double-rendered);
+  - no missed updates between mount and subscription;
+  - a changed `initialValue` prop is respected by later reads;
+  - no-op touches on primitive paths no longer re-render.
+- The hook no longer relies on tosijs proxy identity to detect in-place mutations — it
+  manufactures its own snapshot identity per observer fire. (Fresh-proxy-per-access is a
+  deliberate tosijs property regardless; proxies are wafer-thin and never cached.)
+- `HookType<T>` is now exported so consumers can name the return tuple.
+- README repositioned around the actual use case: an off-ramp from React — state and
+  logic live in framework-free tosijs, and apps can migrate from React views to web
+  components incrementally, with no sync layer and no big-bang rewrite.
+
+### Added
+
+- Tests for the new guarantees: single render on mount, `setValue` referential
+  stability, and no-op-touch dedupe (21 tests total).
+
 ## 1.1.0 (2026-07-20)
 
 ### Fixed

@@ -1,8 +1,9 @@
 // src/use-tosi.ts
 import {
-  useState,
-  useEffect,
   useCallback,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
   createElement
 } from "react";
 import * as tosijs from "tosijs";
@@ -15,23 +16,35 @@ var _resolvePathOf = (t) => {
   return fn;
 };
 var pathOf = _resolvePathOf(tosijs);
+var BAD_ARGUMENT = "useTosi must either be passed a path or a tosijs proxy";
 var useTosi = function(observed, initialValue) {
   const path = typeof observed === "string" ? observed : pathOf(observed);
   if (typeof path !== "string") {
-    console.error("useTosi must either be passed a path or a tosijs proxy", observed);
-    throw new Error("useTosi must either be passed a path or a tosijs proxy");
+    console.error(BAD_ARGUMENT, observed);
+    throw new Error(BAD_ARGUMENT);
   }
-  const [value, update] = useState(() => xin[path] !== undefined ? xin[path] : initialValue);
-  useEffect(() => {
-    const sync = () => {
-      update(() => xin[path] !== undefined ? xin[path] : initialValue);
-    };
-    const listener = observe(path, sync);
-    sync();
-    return () => {
-      unobserve(listener);
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
+  const store = useMemo(() => {
+    const read = () => xin[path] !== undefined ? xin[path] : initialValueRef.current;
+    let snapshot = { value: read() };
+    return {
+      subscribe: (onStoreChange) => {
+        const listener = observe(path, () => {
+          const next = read();
+          if (typeof next === "object" && next !== null || !Object.is(next, snapshot.value)) {
+            snapshot = { value: next };
+            onStoreChange();
+          }
+        });
+        return () => {
+          unobserve(listener);
+        };
+      },
+      getSnapshot: () => snapshot
     };
   }, [path]);
+  const { value } = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const setValue = useCallback((newValue) => {
     xin[path] = newValue;
   }, [path]);
@@ -53,7 +66,7 @@ var reactWebComponents = new Proxy({}, {
   }
 });
 // src/version.ts
-var version = "1.1.0";
+var version = "1.2.0";
 export {
   version,
   useXin,
@@ -62,5 +75,5 @@ export {
   _resolvePathOf
 };
 
-//# debugId=B7071837C688297D64756E2164756E21
+//# debugId=8209F27E3FC6BA1B64756E2164756E21
 //# sourceMappingURL=index.js.map

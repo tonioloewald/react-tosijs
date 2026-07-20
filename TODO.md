@@ -18,9 +18,9 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
   `console.warn` naming the replacement (tosijs ships `warnDeprecated` — only in newer
   versions, so guard it). Tests currently assert `useXin === useTosi` by identity and
   would need to assert delegation instead.
-- [ ] Reimplement `useTosi` on `useSyncExternalStore` with a version-counter snapshot —
-  removes the dependency on tosijs minting fresh proxies per access (see UPSTREAM.md)
-  and closes the mount-to-effect missed-update window.
+- [x] ~~Reimplement `useTosi` on `useSyncExternalStore`~~ — **done in 1.2.0** (snapshot
+  wrapper per observer fire; closed the mount gap, path-switch stale frame, mount
+  double-render, and stale-`initialValue` closure in one change).
 
 ## Testing / gating
 
@@ -39,32 +39,19 @@ Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marke
 
 ## From the confirmation review (2026-07-20, unverified unless noted)
 
-Hook internals (sanity-check each, then fix or document):
+Hook internals — **all resolved by the 1.2.0 `useSyncExternalStore` rewrite** except:
 
-- [ ] *(unverified)* Path switch commits one render pairing the new path with the old
-  path's value — in-browser this paints one frame of the wrong record. Sync during render
-  on path change (prev-props pattern) or migrate to `useSyncExternalStore`; at minimum
-  document the one-commit lag.
-- [ ] *(unverified)* `sync()` closes over `initialValue` from the render the `[path]`-keyed
-  effect last ran, so a changed fallback prop is ignored when the path later becomes
-  undefined. Keep `initialValue` in a ref read inside `sync()`.
-- [ ] *(unverified)* Object/array paths: guaranteed mount double-render (subscribe-time
-  `sync()` never bails — `xin[path]` mints a fresh proxy per access) and value identity
-  changes on every observer fire, breaking downstream memoization. Track the raw value
-  (`xinValue`) in a ref and skip `update()` when unchanged.
-- [ ] *(unverified)* Extract one `read()` closure for the duplicated
-  `xin[path] !== undefined ? xin[path] : initialValue` expression; hoist the doubled
-  error string into a const (nit).
+- [ ] Object-path value identity still changes on every observer fire (fresh proxy read
+  per change), so downstream `memo`/`useMemo` on the value re-runs per change. Inherent
+  to signaling in-place mutations; primitives are deduped. Document if it bites anyone.
 - [ ] *(unverified)* Share the createRoot/act render-and-cleanup scaffolding between the
   two test files via `tests/helpers.tsx` (must stay safe to import before `mock.module` —
   note that constraint in a doc comment).
 
 Other:
 
-- [ ] *(unverified)* Export the hook's return tuple type (e.g. `TosiHookResult<T>`) so
-  consumers can name it.
-- [ ] *(unverified)* Assert `setValue` referential stability across re-renders in the churn
-  test — removing the `useCallback` currently passes the suite.
+- [x] ~~Export the hook's return tuple type~~ — **done in 1.2.0** (`HookType<T>` exported).
+- [x] ~~Assert `setValue` referential stability~~ — **done in 1.2.0** (test added).
 - [ ] *(unverified)* Committed `dist/` has no freshness gate — add CI
   `bun run build && git diff --exit-code dist/`, or stop committing dist and use `prepare`.
 - [ ] *(unverified)* Demo bundle is ~1.15MB minified because the demo imports all of

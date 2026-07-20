@@ -2,7 +2,11 @@
 
 [github](https://github.com/tonioloewald/react-tosijs#readme) | [npm](https://www.npmjs.com/package/react-tosijs) | [tosijs](https://tosijs.net) | [discord](https://discord.gg/ramJ9rgky5)
 
-This is a tiny helper module for integrating tosijs with [React](https://reactjs.org) (or vice versa).
+This is a tiny module that integrates tosijs with [React](https://react.dev) — and, more
+to the point, provides **an off-ramp from React**: your state and logic live in tosijs
+(no framework attached), React becomes just one way of viewing it, and you can replace
+React views with web components — bound to the same state — as fast or as slowly as makes
+sense. No sync layer, no big-bang rewrite.
 
 It provides two very useful things:
 

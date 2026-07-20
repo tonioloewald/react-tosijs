@@ -2,23 +2,42 @@
 
 [github](https://github.com/tonioloewald/react-tosijs#readme) | [npm](https://www.npmjs.com/package/react-tosijs) | [tosijs](https://tosijs.net) | [discord](https://discord.gg/ramJ9rgky5)
 
-Incredibly simple, powerful, and efficient state management for React…
+**An off-ramp from React — one that otherwise basically doesn't exist.**
 
-`useTosi` leverages [React hooks](https://react.dev/reference/react/hooks) to
-make managing application state incredibly simple. No more passing data down through
-the virtual DOM hierarchy, and needing to reroute data or write reducers.
+Most "React state management" libraries deepen your commitment to React: your state,
+your logic, and your components all end up shaped around it. `react-tosijs` points the
+other way. Your state lives in [tosijs](https://tosijs.net) — plain observable objects
+with no framework attached — and React becomes just one way of looking at it. Build new
+functionality on a vastly superior state management system, and migrate away from React
+as fast or as slowly as makes sense. Or don't migrate at all: it's also simply the
+easiest state management you'll ever use in a React app.
 
-[sandbox example](https://codesandbox.io/s/xinjs-react-reminders-demo-v0-4-2-l46k52?file=/src/App.tsx)
+It provides two things:
 
-> This is an old example that uses `xinjs` and `react-xinjs`. `xinjs` has since been renamed `tosijs`
-> (and `react-xinjs` is now `react-tosijs`).
+- **`useTosi`** — a `useState`-shaped hook bound to a tosijs path. State can be created,
+  read, and mutated *outside* React (vanilla JS, web components, the browser console) and
+  React views just follow. Built on `useSyncExternalStore`, so it's concurrent-rendering
+  safe.
+- **`reactWebComponents`** — a proxy that turns any custom element into a React component
+  (`reactWebComponents.fooBar` renders `<foo-bar>`), so web components and React
+  components can coexist on the same page, bound to the same state.
 
-`useTosi` allows you to use `xin` to manage state in [React](https://react.dev) apps.
+## The off-ramp, step by step
 
-- work with pure components everywhere (use `useTosi` the way you'd use `useState`)
-- cleanly separate logic from presentation
-- avoid code and performance "tax" of passing complex state through DOM hierarchies
-- cleanly integrate react and non-react code without writing and maintaining wrappers
+1. **Move state and logic out of components** into a tosijs proxy. This works inside your
+   existing React 18/19 app — no rewrite, no adapters.
+2. **Components become pure views** via `useTosi`. Reducers, context plumbing, and
+   prop-drilling simply stop being necessary.
+3. **Build new UI as web components** ([tosijs-ui](https://ui.tosijs.net), or your own via
+   tosijs `Component`), rendered inside React with `reactWebComponents`. They bind to the
+   same paths as your React views — both stay in sync automatically, because neither owns
+   the state.
+4. **Replace remaining React views at your own pace.** When the last one goes, delete
+   `react` and `react-tosijs` from package.json. Your state, logic, and new components are
+   untouched — they never depended on React in the first place.
+
+There is no step where you maintain two sources of truth, write a sync layer, or do a
+big-bang rewrite.
 
 ## useTosi in two minutes
 
@@ -45,15 +64,14 @@ const Clock = () => {
 }
 ```
 
-One difference from `useState`: `setValue` takes the next **value**, not an
-updater function — `setCount(c => c + 1)` would store the function itself
-(tosijs state legitimately holds functions, so they are never auto-invoked).
+Note that `useTosi` returns `[value, setValue]` just as `useState` does — but here the
+state is updated _outside_ React and it _just works_. (You could write a more complex
+self-contained `<Clock>` that sets up and tears down its own interval, but nothing about
+that would be less code or faster.)
 
-Note that `useTosi` returns `[value, setValue]` just as `useState` does
-(and if you wanted to write a more complex self-contained `<Clock>` that
-sets up and tears down setInterval then nothing is stopping you except
-wanting to write less, simpler code that runs faster), but in
-this case the state is being updated _outside_ of React and it _just works_.
+One difference from `useState`: `setValue` takes the next **value**, not an updater
+function — `setCount(c => c + 1)` would store the function itself (tosijs state
+legitimately holds functions, so they are never auto-invoked).
 
 ## Todo List Example
 
@@ -121,6 +139,10 @@ const TodoApp = () => (
 root.render(<TodoApp />)
 ```
 
+Notice `app` is a plain observable object: `addItem` is testable without rendering
+anything, the console can poke `app.todos` directly, and if `<List />` were replaced
+with a web component tomorrow, `app` wouldn't change at all. That's the off-ramp.
+
 ## reactWebComponents
 
 `reactWebComponents.fooBar` gives you a React functional component that renders
@@ -139,6 +161,12 @@ const Doc = () => <Markdown class="doc" src="/README.md" />
 > Note: on React 18, pass `class` (not `className`) to web components —
 > React 18 sets props on custom elements as attributes verbatim. React 19
 > handles `className` on custom elements natively.
+
+## Compatibility
+
+- **React** `^18.2.0 || ^19.0.0` (the hook is built on `useSyncExternalStore`).
+- **tosijs** `^1.0.6` — the library uses `tosiPath` when available (tosijs ≥ 1.1) and
+  falls back to `xinPath` on older versions.
 
 ## Development
 

@@ -4,7 +4,7 @@ export declare const _resolvePathOf: (t: {
     tosiPath?: (x: any) => string | undefined;
     xinPath?: (x: any) => string | undefined;
 }) => ((x: any) => string | undefined);
-type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
+export type HookType<T = any> = [value: T, setValue: (newValue: T) => void];
 export declare const useTosi: <T = any>(observed: XinTouchableType, initialValue?: T) => HookType<T>;
 /** @deprecated Use useTosi instead */
 export declare const useXin: <T = any>(observed: XinTouchableType, initialValue?: T) => HookType<T>;

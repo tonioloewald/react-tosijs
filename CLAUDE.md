@@ -12,18 +12,26 @@ https://github.com/tonioloewald/tosijs-coding-practices (checked out locally at
 ## What this is
 
 `react-tosijs` — a tiny React bridge for tosijs state management, published as ESM with
-`react` and `tosijs` as peer dependencies. The GitHub repo was renamed `react-xinjs` →
+`react` and `tosijs` as peer dependencies. Its positioning (per the maintainer) is an
+**off-ramp from React**: state and logic live in framework-free tosijs, React is one view
+layer among others, and web components bound to the same paths let apps migrate off React
+incrementally. The GitHub repo was renamed `react-xinjs` →
 `react-tosijs` in July 2026 (the local folder may still carry the old name; `xinjs` itself
 was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
 
 - `useTosi(pathOrProxy, initialValue?)` — a `useState`-shaped hook (`[value, setValue]`)
   backed by the global `xin` proxy. It resolves its argument to a tosijs path (via a
   `tosiPath ?? xinPath` shim, `_resolvePathOf`, exported for tests — it keeps the wide
-  `^1.0.6` tosijs peer range honest), subscribes via `observe`/`unobserve` in a `useEffect`
-  keyed on the path, re-syncs on subscribe (tosijs observers never fire on registration),
-  and writes through `xin[path]`. `setValue` takes the next value, never a `useState`-style
-  updater — function values are legitimate state and are stored, not invoked. State can be
-  mutated outside React and components re-render. `useXin` is a deprecated back-compat alias.
+  `^1.0.6` tosijs peer range honest) and is built on **`useSyncExternalStore`**: a
+  per-path store (memoized on `[path]`) holds a `{ value }` snapshot wrapper that is
+  replaced only when the tosijs observer fires. The wrapper exists because `xin[path]`
+  mints a fresh proxy per access (a deliberate tosijs property — proxies are wafer-thin,
+  never cached) while `getSnapshot` must return stable identity between changes; its
+  replacement is also what signals in-place mutations. No-op touches on primitive paths
+  are deduped; object paths always propagate. `setValue` takes the next value, never a
+  `useState`-style updater — function values are legitimate state and are stored, not
+  invoked. State can be mutated outside React and components re-render. `useXin` is a
+  deprecated back-compat alias.
 - `reactWebComponents` — a Proxy that turns camelCase property access (e.g. `.xinLottie`)
   into a React function component rendering the corresponding kebab-case custom element
   (`<xin-lottie>`), for using web components (e.g. `tosijs-ui`) from React without wrappers.
