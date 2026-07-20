@@ -11,9 +11,6 @@ export interface DevToolsOptions {
   roots: string[];
 }
 
-const under = (root: string, path: string): boolean =>
-  path === root || path.startsWith(`${root}.`) || path.startsWith(`${root}[`);
-
 /**
  * Stream tosijs path touches to the Redux DevTools browser extension:
  * each touched path becomes an action (the path string is the action
@@ -37,13 +34,17 @@ export const connectDevTools = ({
   const snapshot = () =>
     Object.fromEntries(roots.map((root) => [root, valueOf(xin[root])]));
   connection.init(snapshot());
-  const listener = observe(/^./, (path: string) => {
-    if (roots.some((root) => under(root, path))) {
+  // one tosijs observer per root — tosijs's own path matching covers
+  // subpath touches and ancestor replacement, no hand-rolled filter
+  const listeners = roots.map((root) =>
+    observe(root, (path: string) => {
       connection.send({ type: path }, snapshot());
-    }
-  });
+    }),
+  );
   return () => {
-    unobserve(listener);
+    for (const listener of listeners) {
+      unobserve(listener);
+    }
     connection.unsubscribe?.();
   };
 };

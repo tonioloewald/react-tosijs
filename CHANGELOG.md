@@ -35,9 +35,19 @@
   compile-time checked via template-literal types (`TosiPath<S>`, `TosiPathValue<S, P>`
   exported for building your own helpers).
 - **`persist(path, options?)`** — hydrate a path from storage and write it back on
-  change (framework-free; returns a stop function).
+  change (framework-free; returns a stop function). Writes are coalesced to one
+  serialize + write per change flush; `undefined` is stored as `null` (never the
+  poisonous string `"undefined"`); a missing storage (non-browser environments) is an
+  actionable error. Durable-state caveat: bump the `key` when a persisted shape changes.
 - **`connectDevTools({ roots })`** — stream path touches to the Redux DevTools
-  extension as path-labelled actions with raw-value snapshots.
+  extension as path-labelled actions with raw-value snapshots (one tosijs observer per
+  root — tosijs's own path matching does the filtering).
+- Typed-path grammar accepts any keyed lookup (`[email=...]`, not just `[id=...]`), and
+  bracket lookups yield `E | undefined` (an index can be out of range, a key can miss).
+- The `tosiValue ?? xinValue` shim throws a clear version error if neither export
+  exists, matching its `tosiPath` sibling.
+- `useXin` remains a silent alias through 1.x (deprecation is JSDoc-only by choice; a
+  warn-once wrapper is tracked in TODO.md).
 - `bun run typecheck` (type-level tests included) — now part of the `prepublishOnly`
   gate alongside tests and build.
 - Tests for the new guarantees: store-contract (mount-gap re-sync), SSR smoke, object-

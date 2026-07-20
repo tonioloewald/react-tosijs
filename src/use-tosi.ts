@@ -29,12 +29,21 @@ export const _resolvePathOf = (t: {
 
 const pathOf = _resolvePathOf(tosijs as any);
 
-// tosiValue (né xinValue) unwraps a proxy to the raw underlying data;
-// identity fallback for hypothetical versions with neither
+// tosiValue (né xinValue) unwraps a proxy to the raw underlying data —
+// both spot-checked present at tosijs 1.0.6; like _resolvePathOf, a
+// version with neither is a loud error, not a silent degradation
 export const _resolveValueOf = (t: {
   tosiValue?: (x: any) => any;
   xinValue?: (x: any) => any;
-}): ((x: any) => any) => t.tosiValue ?? t.xinValue ?? ((x: any) => x);
+}): ((x: any) => any) => {
+  const fn = t.tosiValue ?? t.xinValue;
+  if (fn === undefined) {
+    throw new Error(
+      "react-tosijs requires tosijs ^1.0.6 (found neither tosiValue nor xinValue export)",
+    );
+  }
+  return fn;
+};
 
 const valueOf = _resolveValueOf(tosijs as any);
 

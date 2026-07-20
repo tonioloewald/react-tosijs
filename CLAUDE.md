@@ -17,7 +17,12 @@ https://github.com/tonioloewald/tosijs-coding-practices (checked out locally at
 layer among others, and web components bound to the same paths let apps migrate off React
 incrementally. The GitHub repo was renamed `react-xinjs` →
 `react-tosijs` in July 2026 (the local folder may still carry the old name; `xinjs` itself
-was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
+was renamed `tosijs`). The public API spans four modules, all re-exported by
+`src/index.ts`: `src/use-tosi.ts` (the hook + `reactWebComponents`), `src/paths.ts`
+(compile-time-checked paths: `typedTosi`, `TosiPath`, `TosiPathValue`), `src/persist.ts`
+(storage sync), and `src/devtools.ts` (Redux DevTools tap). persist/devtools/paths are
+framework-free by design — kept in the bridge deliberately (tosijs core stays lean per
+the maintainer; see UPSTREAM.md). The core, `src/use-tosi.ts`:
 
 - `useTosi(pathOrProxy, initialValue?)` — a `useState`-shaped hook (`[value, setValue]`)
   backed by the global `xin` proxy. It resolves its argument to a tosijs path (via a
@@ -38,7 +43,8 @@ was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
   Note: on React 18, custom elements need `class`, not `className` (React sets props on
   custom elements as attributes verbatim).
 
-`src/index.ts` just re-exports `use-tosi.ts` and `version.ts`.
+`src/index.ts` re-exports `use-tosi.ts`, `paths.ts`, `persist.ts`, `devtools.ts`, and
+`version.ts`.
 
 ## Commands
 
@@ -53,7 +59,10 @@ was renamed `tosijs`). The entire public API lives in `src/use-tosi.ts`:
   query (`../src/use-tosi.ts?fresh-under-mock` — must target use-tosi.ts, not index.ts,
   or the re-export resolves to the cached unmocked module). The mock factory must only
   reference values captured *before* `mock.module` is called, or bun deadlocks.
-- `npm publish` runs `prepublishOnly` (tests + build) automatically.
+- `bun run typecheck` — `tsc --noEmit` over src + tests via `tsconfig.typecheck.json`;
+  type-level tests live in `tests/*.typecheck.ts` (compiled, never executed — the suffix
+  keeps bun test away from them).
+- `npm publish` runs `prepublishOnly` (tests + typecheck + build) automatically.
 
 There is no lint/format script (eslint/prettier are devDeps only).
 

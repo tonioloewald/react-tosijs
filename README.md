@@ -199,6 +199,9 @@ import { persist } from 'react-tosijs'
 const stop = persist('app.todos') // localStorage, key "tosijs:app.todos"
 ```
 
+Writes are coalesced (one serialize + write per change flush). Durable state outlives
+code: if the shape of a persisted value changes between releases, bump the `key`.
+
 ## Redux DevTools
 
 `connectDevTools` streams path touches to the Redux DevTools extension — each touched

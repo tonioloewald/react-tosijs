@@ -15,11 +15,18 @@ export interface PersistOptions {
 
 /**
  * Persist the value at a tosijs path: hydrate it from storage now (if a
- * stored value exists), then write it back (JSON, raw values) on every
- * change. Framework-free — works whether the path is rendered by React,
- * web components, or nothing at all. Returns a stop function.
+ * stored value exists), then write it back (JSON, raw values) on change.
+ * Writes are coalesced — tosijs fires the observer once per touched
+ * sibling path per flush, but the subtree is serialized and written at
+ * most once per microtask. Framework-free — works whether the path is
+ * rendered by React, web components, or nothing at all. Returns a stop
+ * function.
  *
  *   const stop = persist('app.todos')
+ *
+ * Durable state outlives code: if the shape of the persisted value
+ * changes between releases, bump the key (or clear storage) — old-shape
+ * values hydrate as-is.
  */
 export const persist = (
   observed: XinTouchableType,
@@ -30,6 +37,11 @@ export const persist = (
     throw new Error("persist must be passed a path or a tosijs proxy");
   }
   const storage = options.storage ?? (globalThis as any).localStorage;
+  if (storage === undefined) {
+    throw new Error(
+      `persist: no storage available for ${path} — pass options.storage in non-browser environments`,
+    );
+  }
   const key = options.key ?? `tosijs:${path}`;
 
   const stored = storage.getItem(key);
@@ -41,14 +53,28 @@ export const persist = (
     }
   }
 
-  const listener = observe(path, () => {
+  let writeQueued = false;
+  let stopped = false;
+  const write = () => {
+    writeQueued = false;
+    if (stopped) return;
     try {
-      storage.setItem(key, JSON.stringify(valueOf(xin[path])));
+      const json = JSON.stringify(valueOf(xin[path]));
+      // JSON.stringify(undefined) is undefined, which setItem would
+      // coerce to the poisonous string "undefined"
+      storage.setItem(key, json === undefined ? "null" : json);
     } catch (error) {
       console.error(`persist: could not store value for ${key}`, error);
     }
+  };
+  const listener = observe(path, () => {
+    if (!writeQueued) {
+      writeQueued = true;
+      queueMicrotask(write);
+    }
   });
   return () => {
+    stopped = true;
     unobserve(listener);
   };
 };

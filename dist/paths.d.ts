@@ -5,15 +5,19 @@ import { HookType } from "./use-tosi";
  * closures had over them: compile-time checking.
  */
 type Scalar = string | number | boolean | null | undefined | ((...args: any[]) => any);
-type ArrayIndex = `[${number}]` | `[id=${string}]`;
+type ArrayIndex = `[${number}]` | `[${string}=${string}]`;
 type SubPath<T> = T extends Scalar ? never : T extends Array<any> ? never : {
     [K in keyof T & string]: T[K] extends Scalar ? K : T[K] extends Array<infer E> ? K | `${K}${ArrayIndex}` | (E extends Scalar ? never : `${K}${ArrayIndex}.${SubPath<E>}`) : K | `${K}.${SubPath<T[K]>}`;
 }[keyof T & string];
 /** All valid observation paths into a state shape S */
 export type TosiPath<S> = SubPath<S>;
 type ElementOf<A> = A extends Array<infer E> ? E : never;
-/** The value type at path P within state shape S */
-export type TosiPathValue<T, P extends string> = P extends `${infer Head}.${infer Rest}` ? TosiPathValue<TosiPathValue<T, Head>, Rest> : P extends `${infer K}[${string}]` ? ElementOf<TosiPathValue<T, K>> : P extends keyof T ? T[P] : never;
+/**
+ * The value type at path P within state shape S. Indexed/keyed lookups
+ * yield `E | undefined` — an index can be out of range and a key can
+ * miss — so pair them with an initialValue or handle undefined.
+ */
+export type TosiPathValue<T, P extends string> = P extends `${infer Head}.${infer Rest}` ? TosiPathValue<NonNullable<TosiPathValue<T, Head>>, Rest> : P extends `${infer K}[${string}]` ? ElementOf<TosiPathValue<T, K>> | undefined : P extends keyof T ? T[P] : never;
 /**
  * A typed facade over useTosi for a known state shape:
  *

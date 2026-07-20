@@ -73,6 +73,18 @@ Other:
   test-suitable introspection (observer count per path) so churn tests stop needing the
   `mock.module` namespace-snapshot dance.
 
+## From the 1.2.0 final review (2026-07-20, unverified leads)
+
+- [ ] Coverage gaps in the extras: persist's proxy-argument, default-storage, and
+  setItem-failure branches; a per-render (path, value) recording test pinning the
+  "path switch updates in the same render" claim.
+- [ ] `initialValue` is read through a ref written during render — audit under
+  concurrent rendering (a torn render could briefly expose a sibling's fallback).
+- [ ] persist: consider a `version` option (auto-bump key / migrate hook) for durable
+  state; currently documented as "bump the key on shape change".
+- [ ] DRY the path-or-proxy resolution (duplicated between useTosi and persist, already
+  drifted in error wording) and the per-module shim resolution (×3) into one helper.
+
 ## Docs / hygiene
 
 - [ ] *(unverified)* README.md and `demo/static/use-tosi.md` are drifting duplicates (the

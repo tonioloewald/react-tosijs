@@ -16,7 +16,13 @@ var _resolvePathOf = (t) => {
   return fn;
 };
 var pathOf = _resolvePathOf(tosijs);
-var _resolveValueOf = (t) => t.tosiValue ?? t.xinValue ?? ((x) => x);
+var _resolveValueOf = (t) => {
+  const fn = t.tosiValue ?? t.xinValue;
+  if (fn === undefined) {
+    throw new Error("react-tosijs requires tosijs ^1.0.6 (found neither tosiValue nor xinValue export)");
+  }
+  return fn;
+};
 var valueOf = _resolveValueOf(tosijs);
 var BAD_ARGUMENT = "useTosi must either be passed a path or a tosijs proxy";
 var _createStore = (path, read) => {
@@ -88,6 +94,9 @@ var persist = (observed, options = {}) => {
     throw new Error("persist must be passed a path or a tosijs proxy");
   }
   const storage = options.storage ?? globalThis.localStorage;
+  if (storage === undefined) {
+    throw new Error(`persist: no storage available for ${path} — pass options.storage in non-browser environments`);
+  }
   const key = options.key ?? `tosijs:${path}`;
   const stored = storage.getItem(key);
   if (stored !== null) {
@@ -97,14 +106,27 @@ var persist = (observed, options = {}) => {
       console.error(`persist: ignoring unparseable stored value for ${key}`, error);
     }
   }
-  const listener = observe2(path, () => {
+  let writeQueued = false;
+  let stopped = false;
+  const write = () => {
+    writeQueued = false;
+    if (stopped)
+      return;
     try {
-      storage.setItem(key, JSON.stringify(valueOf2(xin2[path])));
+      const json = JSON.stringify(valueOf2(xin2[path]));
+      storage.setItem(key, json === undefined ? "null" : json);
     } catch (error) {
       console.error(`persist: could not store value for ${key}`, error);
     }
+  };
+  const listener = observe2(path, () => {
+    if (!writeQueued) {
+      writeQueued = true;
+      queueMicrotask(write);
+    }
   });
   return () => {
+    stopped = true;
     unobserve2(listener);
   };
 };
@@ -112,7 +134,6 @@ var persist = (observed, options = {}) => {
 import * as tosijs3 from "tosijs";
 var { xin: xin3, observe: observe3, unobserve: unobserve3 } = tosijs3;
 var valueOf3 = _resolveValueOf(tosijs3);
-var under = (root, path) => path === root || path.startsWith(`${root}.`) || path.startsWith(`${root}[`);
 var connectDevTools = ({
   name = "tosijs",
   roots
@@ -124,13 +145,13 @@ var connectDevTools = ({
   const connection = extension.connect({ name });
   const snapshot = () => Object.fromEntries(roots.map((root) => [root, valueOf3(xin3[root])]));
   connection.init(snapshot());
-  const listener = observe3(/^./, (path) => {
-    if (roots.some((root) => under(root, path))) {
-      connection.send({ type: path }, snapshot());
-    }
-  });
+  const listeners = roots.map((root) => observe3(root, (path) => {
+    connection.send({ type: path }, snapshot());
+  }));
   return () => {
-    unobserve3(listener);
+    for (const listener of listeners) {
+      unobserve3(listener);
+    }
     connection.unsubscribe?.();
   };
 };
@@ -149,5 +170,5 @@ export {
   _createStore
 };
 
-//# debugId=348F7BEBCA2062B864756E2164756E21
+//# debugId=061E49ED24C73A9464756E2164756E21
 //# sourceMappingURL=index.js.map

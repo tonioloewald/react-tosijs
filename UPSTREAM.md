@@ -6,13 +6,29 @@ absorbed forever).
 
 ## tosijs
 
-- **Proxy identity** — tosijs mints a fresh Proxy per `xin[path]` access. Per the
-  maintainer this is deliberate and permanent (proxies are wafer-thin wrappers on a
-  string; caching them would buy nothing), so it's a design property, not a risk — the
-  remaining value of the filed issue is simply documenting the guarantee. As of 1.2.0
-  `useTosi` no longer depends on it anyway: the `useSyncExternalStore` snapshot wrapper
-  manufactures its own identity change per observer fire.
+- **Proxy identity + change-tick seam** — tosijs mints a fresh Proxy per `xin[path]`
+  access. Per the maintainer this is deliberate and permanent (proxies are wafer-thin
+  wrappers on a string), so it's a design property, not a risk. The filed issue retains
+  **two** live asks: (a) document that guarantee, and (b) a change-tick /
+  subscribe+getSnapshot seam — which remains the **only** way to close `useTosi`'s
+  residual mount gap (an in-place mutation flushed pre-subscribe leaves raw identity
+  equal and is undetectable by the subscribe-time re-sync; see `src/use-tosi.ts` and the
+  1.2.0 CHANGELOG). A docs-only close would abandon (b) — don't.
   Issue: https://github.com/tonioloewald/tosijs/issues/17
+- **Rename shims** — `src/use-tosi.ts` shims `tosiPath ?? xinPath` and
+  `tosiValue ?? xinValue` (both spot-checked present at tosijs 1.0.6, not yet covered by
+  a CI floor matrix — see TODO.md). Retire both shims together when the peer floor moves
+  to ≥ 1.1.
+- **DOM globals required at import** — plain-Node `import 'tosijs'` throws
+  (`HTMLElement is not defined`) even for consumers using only the DOM-free state API.
+  Costs here: SSR documented as DOM-shimmed-only, happy-dom preload required before
+  tosijs loads in tests. Asked for a `tosijs/state` subpath export or lazy DOM-global
+  access. Issue: https://github.com/tonioloewald/tosijs/issues/18
+- **Framework-free extras live here deliberately** — `persist`, `connectDevTools`, and
+  the path types touch no React API, but per the maintainer tosijs core doesn't need
+  them (tosijs dedupes at the DOM-update seam; these serve app/bridge concerns), so they
+  stay in react-tosijs rather than being hoisted. If they ever graduate to a standalone
+  framework-free package, react-tosijs will keep re-exports so the move is non-breaking.
 
 - **`tosiPath` availability** — `tosiPath` arrived in tosijs 1.1; to keep the wide `^1.0.6`
   peer range honest, `src/use-tosi.ts` shims `tosiPath ?? xinPath` (unit-tested via
@@ -37,6 +53,23 @@ absorbed forever).
   upstream issue was filed; the peer range now allows React 19 and the workaround is scoped
   to React 18 in docs. Resolution: adopt React 19 in the test matrix (TODO.md), then retire
   the `class` guidance.
+
+## happy-dom
+
+- **`.d.ts` breakage under this TS version** — happy-dom's `BrowserWindow.d.ts` references
+  `node:stream/web`'s `UnderlyingDefaultSource`, which this repo's TS rejects, forcing
+  `skipLibCheck: true` in `tsconfig.typecheck.json` (which blinds the typecheck gate to
+  *all* dependency `.d.ts`). Remove `skipLibCheck` when a happy-dom or TS upgrade clears
+  it. Not yet verified against latest happy-dom/TS — verify before filing upstream.
+
+## bun
+
+- **`mock.module` can't retro-wrap an already-imported module** — worked around in
+  `tests/subscription-churn.test.tsx` via a cache-busting query import
+  (`../src/use-tosi.ts?fresh-under-mock`). Not filed on oven-sh/bun: plausibly documented
+  behavior rather than a bug — verify against bun's docs/issues before filing. Preferred
+  retirement: tosijs#17's observer-introspection ask would remove the need for the mock
+  entirely.
 
 ## tosijs-coding-practices
 

@@ -8,7 +8,11 @@ to the point, provides **an off-ramp from React**: your state and logic live in 
 React views with web components — bound to the same state — as fast or as slowly as makes
 sense. No sync layer, no big-bang rewrite.
 
-It provides two very useful things:
+It provides two core things — `useTosi()` and the `reactWebComponents` proxy — plus
+three framework-free extras: `typedTosi<AppState>()` (compile-time-checked paths),
+`persist()` (storage sync), and `connectDevTools()` (Redux DevTools tap). See the
+[README](https://github.com/tonioloewald/react-tosijs#readme) for the extras; the core
+two are below.
 
 ## `useTosi()`
 

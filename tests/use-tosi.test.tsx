@@ -6,7 +6,9 @@ import {
   useTosi,
   useXin,
   reactWebComponents,
+  typedTosi,
   _resolvePathOf,
+  _resolveValueOf,
   _createStore,
 } from "../src/index";
 
@@ -388,6 +390,28 @@ describe("_resolvePathOf (tosijs ^1.0.6 compatibility shim)", () => {
     expect(() => _resolvePathOf({})).toThrow(
       "react-tosijs requires tosijs ^1.0.6",
     );
+  });
+
+  test("_resolveValueOf prefers tosiValue, falls back to xinValue, throws on neither", () => {
+    const tosi = (x: any) => x;
+    const xinV = (x: any) => x;
+    expect(_resolveValueOf({ tosiValue: tosi, xinValue: xinV })).toBe(tosi);
+    expect(_resolveValueOf({ xinValue: xinV })).toBe(xinV);
+    expect(() => _resolveValueOf({})).toThrow(
+      "react-tosijs requires tosijs ^1.0.6",
+    );
+  });
+});
+
+describe("typedTosi", () => {
+  test("the typed facade works at runtime", () => {
+    const { useTosi: useTyped } = typedTosi<{ state: { first: string } }>();
+    const Typed = () => {
+      const [first] = useTyped("state.first");
+      return <div>{first}</div>;
+    };
+    const container = render(<Typed />);
+    expect(container.textContent).toBe(String(state.first));
   });
 });
 
