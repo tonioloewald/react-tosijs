@@ -4,8 +4,11 @@
 
 **Insanely simple state management for React — and an off-ramp from React. Take your pick.**
 
-If you just want the state management: `useTosi` works the way `useState` does, minus
-the plumbing — no reducers, no providers, no prop-drilling. If you want the off-ramp
+If you just want the state management: `useTosi` has `useState`'s shape and works way
+better — there are no implicit execution zones (state isn't trapped in component
+lifecycles, closure captures, or hook rules), and you can talk to state from outside
+the React tree: a timer, a socket handler, the browser console, code that's never heard
+of React. No reducers, no providers, no prop-drilling. If you want the off-ramp
 (one that otherwise basically doesn't exist): most "React state management" libraries
 deepen your commitment to React, but here your state lives in [tosijs](https://tosijs.net)
 — plain observable objects with no framework attached — and React becomes just one way

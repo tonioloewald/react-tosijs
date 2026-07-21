@@ -4,8 +4,10 @@
 
 **Insanely simple state management for React — and an off-ramp from React. Take your pick.**
 
-If you just want the state management: `useTosi` works the way `useState` does, minus the
-plumbing. If you want the off-ramp (one that otherwise basically doesn't exist): your
+If you just want the state management: `useTosi` has `useState`'s shape and works way
+better — no implicit execution zones, and you can talk to state from outside the React
+tree (try it in the console below). If you want the off-ramp (one that otherwise
+basically doesn't exist): your
 state and logic live in [tosijs](https://tosijs.net) — plain observable objects with no
 framework attached — and React becomes just one way of viewing them. Replace React views
 with web components bound to the same state as fast or as slowly as makes sense, and when
