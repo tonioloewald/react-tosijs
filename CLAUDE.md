@@ -84,6 +84,11 @@ practices).
 - Watching: changes under `src/` trigger a rebuild; changes under `demo/` trigger a full
   prebuild (which wipes `docs/` and `dist/`).
 - The demo imports the library by its package name via the `"react-tosijs": "file:."` devDep.
+- **After upgrading tosijs or tosijs-ui, load the demo in a real browser** (`bun start` →
+  http://localhost:8016). Undefined custom elements fail *silently* — no console error,
+  no build error, no test failure. The 1.1.0 tosijs-ui upgrade renamed `xin-*` element
+  tags to `tosi-*` and the demo's lottie + markdown panels were inert for a day before
+  anyone noticed. Diagnostic: `customElements.get('<tag>')` in the console.
 - Tests are kept out of the library build by living in `tests/` (outside tsconfig `include`).
 
 ## Naming
