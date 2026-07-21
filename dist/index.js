@@ -156,7 +156,7 @@ var connectDevTools = ({
   };
 };
 // src/version.ts
-var version = "1.2.0";
+var version = "1.2.1";
 export {
   version,
   useXin,
@@ -170,5 +170,5 @@ export {
   _createStore
 };
 
-//# debugId=061E49ED24C73A9464756E2164756E21
+//# debugId=59C90B12B3B3E82364756E2164756E21
 //# sourceMappingURL=index.js.map

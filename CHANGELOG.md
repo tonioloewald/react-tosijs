@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.1 (2026-07-21)
+
+Demo site fix + docs. No library changes.
+
+### Fixed
+
+- **Demo site**: tosijs-ui 1.6 renamed its element tags `xin-*` → `tosi-*`, leaving the
+  demo's lottie and markdown panels silently inert since the 1.1.0 dependency upgrade
+  (undefined custom elements produce no errors). Demo now renders `tosi-lottie` /
+  `tosi-md`.
+
+### Changed
+
+- Positioning reworded throughout (README, demo page, npm description): *"Insanely
+  simple state management for React — and an off-ramp from React. Take your pick."*
+  `useTosi` has `useState`'s shape and works way better — no implicit execution zones,
+  and state is reachable from outside the React tree.
+
 ## 1.2.0 (2026-07-20)
 
 ### Changed
