@@ -31,8 +31,10 @@ absorbed forever).
   stay in react-tosijs rather than being hoisted. If they ever graduate to a standalone
   framework-free package, react-tosijs will keep re-exports so the move is non-breaking.
   **The second-consumer trigger has now FIRED**: ngx-tosijs (2026-07-21) duplicates all
-  three modules. Until the shared package exists, bug fixes must land in both repos —
-  see TODO.md.
+  three modules. Graduation issue: https://github.com/tonioloewald/react-tosijs/issues/3
+  Until the shared package exists, bug fixes must land in both repos (first known
+  divergence to port here: ngx 0.9.1's persist guards against throwing localStorage
+  getters in sandboxed iframes).
 
 - **`tosiPath` availability** — `tosiPath` arrived in tosijs 1.1; to keep the wide `^1.0.6`
   peer range honest, `src/use-tosi.ts` shims `tosiPath ?? xinPath` (unit-tested via
