@@ -1,5 +1,10 @@
 # TODO
 
+- [ ] **Extras package (trigger fired)** — ngx-tosijs now duplicates `paths.ts`,
+  `persist.ts`, and `devtools.ts`. Graduate them to a shared framework-free package
+  (e.g. `tosijs-extras`) with both bridges re-exporting (non-breaking). Until then,
+  bug fixes must land in both repos.
+
 Deferred follow-ups from the v1.1.0 pre-release review (2026-07-20). Items marked
 *(unverified)* were lens-reported but not adversarially verified — sanity-check before acting.
 

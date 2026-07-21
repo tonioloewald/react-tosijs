@@ -6,7 +6,9 @@
 
 If you just want the state management: `useTosi` has `useState`'s shape and works way
 better — no implicit execution zones, and you can talk to state from outside the React
-tree (try it in the console below). If you want the off-ramp (one that otherwise
+tree (try it in the console below). The same state model drives Angular too — see
+[angular.tosijs.net](https://angular.tosijs.net) for both frameworks live on one page,
+bound to one state. If you want the off-ramp (one that otherwise
 basically doesn't exist): your
 state and logic live in [tosijs](https://tosijs.net) — plain observable objects with no
 framework attached — and React becomes just one way of viewing them. Replace React views
