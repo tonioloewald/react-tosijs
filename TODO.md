@@ -71,9 +71,9 @@ Other:
   `bun run build && git diff --exit-code dist/`, or stop committing dist and use `prepare`.
 - [ ] *(unverified)* Demo bundle is ~1.15MB minified because the demo imports all of
   tosijs-ui; use per-component entry points if available (demo-site-only).
-- [ ] *(unverified)* Ask on tosijs-ui: does the `tosijs-ui/site` builder support a
-  bring-your-own-bundle React demo with static-asset exclusions? dev.ts hand-rolls ~120
-  lines the ecosystem may already centralize.
+- [x] ~~Migrate to the tosijs-ui site/build system~~ — **deliberately declined**
+  (2026-07-21, maintainer): these bridge libraries are small and focused enough that
+  the hand-rolled dev.ts is fine; revisit if the repos grow or a third bridge appears.
 - [ ] *(unverified)* Comment on tosijs#17 asking that the subscription seam include
   test-suitable introspection (observer count per path) so churn tests stop needing the
   `mock.module` namespace-snapshot dance.
