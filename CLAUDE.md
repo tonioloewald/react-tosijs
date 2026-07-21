@@ -12,10 +12,11 @@ https://github.com/tonioloewald/tosijs-coding-practices (checked out locally at
 ## What this is
 
 `react-tosijs` — a tiny React bridge for tosijs state management, published as ESM with
-`react` and `tosijs` as peer dependencies. Its positioning (per the maintainer) is an
-**off-ramp from React**: state and logic live in framework-free tosijs, React is one view
-layer among others, and web components bound to the same paths let apps migrate off React
-incrementally. The GitHub repo was renamed `react-xinjs` →
+`react` and `tosijs` as peer dependencies. Its positioning (the maintainer's phrasing):
+**"insanely simple state management for React — and an off-ramp from React. Take your
+pick."** State and logic live in framework-free tosijs, React is one view layer among
+others, and web components bound to the same paths let apps migrate off React
+incrementally — or not at all. The GitHub repo was renamed `react-xinjs` →
 `react-tosijs` in July 2026 (the local folder may still carry the old name; `xinjs` itself
 was renamed `tosijs`). The public API spans four modules, all re-exported by
 `src/index.ts`: `src/use-tosi.ts` (the hook + `reactWebComponents`), `src/paths.ts`

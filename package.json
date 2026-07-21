@@ -1,7 +1,7 @@
 {
   "name": "react-tosijs",
   "version": "1.2.0",
-  "description": "An off-ramp from React: tosijs state management as a useState-shaped hook, plus web-component interop — migrate off React incrementally, or just enjoy the simplest state management you've ever used",
+  "description": "Insanely simple state management for React — and an off-ramp from React. Take your pick. tosijs state as a useState-shaped hook, plus web-component interop for incremental migration",
   "exports": {
     "types": "./dist/index.d.ts",
     "import": "./dist/index.js",

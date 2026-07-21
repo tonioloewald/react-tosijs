@@ -2,15 +2,15 @@
 
 [github](https://github.com/tonioloewald/react-tosijs#readme) | [npm](https://www.npmjs.com/package/react-tosijs) | [tosijs](https://tosijs.net) | [discord](https://discord.gg/ramJ9rgky5)
 
-**An off-ramp from React — one that otherwise basically doesn't exist.**
+**Insanely simple state management for React — and an off-ramp from React. Take your pick.**
 
-Most "React state management" libraries deepen your commitment to React: your state,
-your logic, and your components all end up shaped around it. `react-tosijs` points the
-other way. Your state lives in [tosijs](https://tosijs.net) — plain observable objects
-with no framework attached — and React becomes just one way of looking at it. Build new
-functionality on a vastly superior state management system, and migrate away from React
-as fast or as slowly as makes sense. Or don't migrate at all: it's also simply the
-easiest state management you'll ever use in a React app.
+If you just want the state management: `useTosi` works the way `useState` does, minus
+the plumbing — no reducers, no providers, no prop-drilling. If you want the off-ramp
+(one that otherwise basically doesn't exist): most "React state management" libraries
+deepen your commitment to React, but here your state lives in [tosijs](https://tosijs.net)
+— plain observable objects with no framework attached — and React becomes just one way
+of looking at it. Build new functionality on a vastly superior state management system,
+and migrate away from React as fast or as slowly as makes sense.
 
 It provides two things:
 

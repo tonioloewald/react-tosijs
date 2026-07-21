@@ -2,14 +2,14 @@
 
 [github](https://github.com/tonioloewald/react-tosijs#readme) | [npm](https://www.npmjs.com/package/react-tosijs) | [tosijs](https://tosijs.net) | [discord](https://discord.gg/ramJ9rgky5)
 
-**An off-ramp from React — one that otherwise basically doesn't exist.**
+**Insanely simple state management for React — and an off-ramp from React. Take your pick.**
 
-Your state and logic live in [tosijs](https://tosijs.net) — plain observable objects with
-no framework attached — and React becomes just one way of viewing them. Build new
-functionality on a vastly superior state management system, replace React views with web
-components bound to the same state as fast or as slowly as makes sense, and when the last
-React view goes, delete React. No sync layer, no big-bang rewrite. (Or don't migrate at
-all: it's also simply the easiest state management you'll ever use in a React app.)
+If you just want the state management: `useTosi` works the way `useState` does, minus the
+plumbing. If you want the off-ramp (one that otherwise basically doesn't exist): your
+state and logic live in [tosijs](https://tosijs.net) — plain observable objects with no
+framework attached — and React becomes just one way of viewing them. Replace React views
+with web components bound to the same state as fast or as slowly as makes sense, and when
+the last React view goes, delete React. No sync layer, no big-bang rewrite.
 
 This page **is** the demo: the Reminders app above is React rendered by `useTosi`, the
 mascot and this very document are web components rendered through `reactWebComponents`,
