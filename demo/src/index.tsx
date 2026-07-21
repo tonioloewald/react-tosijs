@@ -6,8 +6,9 @@ import { reactWebComponents } from "react-tosijs";
 
 const container = document.querySelector("main");
 
-const BodyMovin = reactWebComponents.xinLottie;
-const Markdown = reactWebComponents.xinMd;
+// tosijs-ui ≥ 1.6 registers tosi-* tags (the xin-* names are gone)
+const BodyMovin = reactWebComponents.tosiLottie;
+const Markdown = reactWebComponents.tosiMd;
 
 const root = ReactDOM.createRoot(container);
 

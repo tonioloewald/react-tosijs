@@ -2,11 +2,18 @@
 
 [github](https://github.com/tonioloewald/react-tosijs#readme) | [npm](https://www.npmjs.com/package/react-tosijs) | [tosijs](https://tosijs.net) | [discord](https://discord.gg/ramJ9rgky5)
 
-This is a tiny module that integrates tosijs with [React](https://react.dev) — and, more
-to the point, provides **an off-ramp from React**: your state and logic live in tosijs
-(no framework attached), React becomes just one way of viewing it, and you can replace
-React views with web components — bound to the same state — as fast or as slowly as makes
-sense. No sync layer, no big-bang rewrite.
+**An off-ramp from React — one that otherwise basically doesn't exist.**
+
+Your state and logic live in [tosijs](https://tosijs.net) — plain observable objects with
+no framework attached — and React becomes just one way of viewing them. Build new
+functionality on a vastly superior state management system, replace React views with web
+components bound to the same state as fast or as slowly as makes sense, and when the last
+React view goes, delete React. No sync layer, no big-bang rewrite. (Or don't migrate at
+all: it's also simply the easiest state management you'll ever use in a React app.)
+
+This page **is** the demo: the Reminders app above is React rendered by `useTosi`, the
+mascot and this very document are web components rendered through `reactWebComponents`,
+and all of it binds to the same framework-free state.
 
 It provides two core things — `useTosi()` and the `reactWebComponents` proxy — plus
 three framework-free extras: `typedTosi<AppState>()` (compile-time-checked paths),
@@ -16,10 +23,10 @@ two are below.
 
 ## `useTosi()`
 
-`useTosi` allows you to use [tosijs](https://tosijs.net) as your state management system for React
-elements. This is insanely simpler than dealing with hooks and providers, allows
-you to integrate code libraries with React without complex adapters, and just makes
-life better in general.
+`useTosi` is a `useState`-shaped hook bound to a [tosijs](https://tosijs.net) path. The
+state it reads doesn't belong to React — it's a plain object that vanilla JS, web
+components, or the browser console can mutate, and the React views just follow. That's
+what makes it an off-ramp: nothing about your model ever needs to know React exists.
 
 The **Reminders** demo, [demo/src/todo.tsx](https://github.com/tonioloewald/react-tosijs/blob/main/demo/src/todo.tsx),
 shows how you can sync state between a vanilla js model and pure functional components using `useTosi()`.
@@ -47,21 +54,25 @@ You can even create a todo item and then modify the text of the item directly:
 app.todos[0].reminder = 'look I changed ya'
 ```
 
-All this is accomplished with, basically, no custom code. And it's performant (try turning on render flashing).
+Notice what just happened: you drove a React UI from outside React, with no custom code.
+And it's performant (try turning on render flashing).
 
 > It's widely estimated that 70% of the code in React apps is simply moving data to and from the UI. With
-> `tosijs` managing state it's a _lot_ less.
+> `tosijs` managing state it's a _lot_ less — and none of what remains is coupled to React.
 
 ## `reactWebComponents` proxy
 
-`reactWebComponents.fooBar` gives you a react functional component for generating
-`<foo-bar>` elements. Since [tosijs](https://tosijs.net) makes it super easy to create web-components,
-and provides a library [tosijs-ui](https://ui.tosijs.net) with lots of useful web-components, and also
-lets you use [tosijs blueprints](https://tosijs.net/?blueprint-loader.ts) to dynamically load web-components as needed,
-this is a Very Good Thing™.
+This is the other half of the off-ramp. `reactWebComponents.fooBar` gives you a react
+functional component for generating `<foo-bar>` elements, so web components and React
+components coexist on the same page, bound to the same state. Since
+[tosijs](https://tosijs.net) makes it super easy to create web-components, provides a
+library [tosijs-ui](https://ui.tosijs.net) with lots of useful web-components, and also
+lets you use [tosijs blueprints](https://tosijs.net/?blueprint-loader.ts) to dynamically
+load web-components as needed, each new piece of UI you build this way is one you'll
+keep when React goes — and until then, React hosts it happily.
 
 [demo/src/index.tsx](https://github.com/tonioloewald/react-tosijs/blob/main/demo/src/index.tsx) shows how you can
-turn web components (both lottie animation component at the top of the demo and the markdown component
+turn web components (both the lottie animation component at the top of the demo and the markdown component
 that is rendering this text) into React functional components using the `reactWebComponents` proxy.
 
 > Note: on React 18, pass `class` (not `className`) to web components — React 18 sets props
