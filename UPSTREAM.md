@@ -51,7 +51,7 @@ absorbed forever).
   component stays blank forever with no error. Affects at least tosijs-ui 1.6.23–1.7.0.
   Diagnosis: `.value` is populated, manual `.render()` displays it. Workaround in both
   demo repos: fetch the markdown explicitly, set `.value`, call `.render()`.
-  Issue: (to be filed — see below)
+  Issue: https://github.com/tonioloewald/tosijs-ui/issues/23
 
 - **`tjs-lang/browser` dynamic import breaks consumer bundles** — **RESOLVED upstream**
   (fixed in tosijs-ui 1.7.0: imports made runtime-dynamic, peer range bumped, warn-once
