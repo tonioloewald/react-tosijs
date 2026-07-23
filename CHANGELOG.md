@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- `reactWebComponents` components now forward refs to the underlying custom element
+  (previously refs were silently dropped despite the `WebComponent` type advertising
+  them).
+- `persist` survives embedding contexts where merely touching `localStorage` throws
+  (sandboxed iframes) — ported from ngx-tosijs 0.9.1 per the fix-in-both-repos rule.
+- Demo: markdown panel loads its source explicitly — works around a tosi-md race
+  (initial render vs src fetch; see UPSTREAM.md) that silently blanked the doc when
+  the fetch was slow (e.g. via CDN).
+
 ## 1.2.1 (2026-07-21)
 
 Demo site fix + docs. No library changes.

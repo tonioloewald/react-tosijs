@@ -1,4 +1,5 @@
 import React, {
+  forwardRef,
   useCallback,
   useMemo,
   useRef,
@@ -170,8 +171,11 @@ export const reactWebComponents: WebComponentProxy = new Proxy(
       );
 
       if (!target[tagName]) {
-        target[tagName] = (props: any) =>
-          createElement<any, Element>(tagName, props);
+        // forwardRef so refs reach the underlying custom element (the
+        // WebComponent type advertises ref support)
+        target[tagName] = forwardRef((props: any, ref: any) =>
+          createElement<any, Element>(tagName, { ...props, ref }),
+        ) as unknown as WebComponent;
       }
 
       return target[tagName];

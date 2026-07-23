@@ -45,6 +45,14 @@ absorbed forever).
 
 ## tosijs-ui
 
+- **`tosi-md` src-path render race** — the `src` attribute change queues the initial
+  render while the fetch completes asynchronously and sets `.value`, which does NOT
+  trigger a re-render; if the queued render wins the race (slow fetch, e.g. CDN), the
+  component stays blank forever with no error. Affects at least tosijs-ui 1.6.23–1.7.0.
+  Diagnosis: `.value` is populated, manual `.render()` displays it. Workaround in both
+  demo repos: fetch the markdown explicitly, set `.value`, call `.render()`.
+  Issue: (to be filed — see below)
+
 - **`tjs-lang/browser` dynamic import breaks consumer bundles** — **RESOLVED upstream**
   (fixed in tosijs-ui 1.7.0: imports made runtime-dynamic, peer range bumped, warn-once
   message when absent). Workaround here: direct `tjs-lang` devDependency — **remove it

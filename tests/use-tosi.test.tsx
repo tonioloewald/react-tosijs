@@ -429,3 +429,14 @@ describe("reactWebComponents", () => {
     expect(reactWebComponents.myThing).toBe(reactWebComponents.myThing);
   });
 });
+
+describe("reactWebComponents refs", () => {
+  test("refs reach the underlying custom element", () => {
+    const FooBar = reactWebComponents.fooBar;
+    const ref = React.createRef<HTMLElement>();
+    const container = render(<FooBar ref={ref}>ref test</FooBar>);
+    expect(ref.current).not.toBeNull();
+    expect(ref.current!.tagName.toLowerCase()).toBe("foo-bar");
+    expect(container.contains(ref.current)).toBe(true);
+  });
+});

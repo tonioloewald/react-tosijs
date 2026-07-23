@@ -1,5 +1,6 @@
 // src/use-tosi.ts
 import {
+  forwardRef,
   useCallback,
   useMemo,
   useRef,
@@ -74,7 +75,7 @@ var reactWebComponents = new Proxy({}, {
       return first + "-" + last.toLocaleLowerCase();
     });
     if (!target[tagName]) {
-      target[tagName] = (props) => createElement(tagName, props);
+      target[tagName] = forwardRef((props, ref) => createElement(tagName, { ...props, ref }));
     }
     return target[tagName];
   }
@@ -93,9 +94,16 @@ var persist = (observed, options = {}) => {
   if (typeof path !== "string") {
     throw new Error("persist must be passed a path or a tosijs proxy");
   }
-  const storage = options.storage ?? globalThis.localStorage;
+  let storage = options.storage;
   if (storage === undefined) {
-    throw new Error(`persist: no storage available for ${path} — pass options.storage in non-browser environments`);
+    try {
+      storage = globalThis.localStorage;
+    } catch (error) {
+      storage = undefined;
+    }
+  }
+  if (storage === undefined) {
+    throw new Error(`persist: no storage available for ${path} — pass options.storage in non-browser or sandboxed environments`);
   }
   const key = options.key ?? `tosijs:${path}`;
   const stored = storage.getItem(key);
@@ -170,5 +178,5 @@ export {
   _createStore
 };
 
-//# debugId=59C90B12B3B3E82364756E2164756E21
+//# debugId=D6AC69CAC89C98D664756E2164756E21
 //# sourceMappingURL=index.js.map
